@@ -1,0 +1,13 @@
+What is Cymus ?
+---------------
+
+Cymus is an emulation library for the I/O chip MOS CIA-8520/6526.
+The name developed out of the combination "CIA" and "MOS".
+Interestingly, this is also the name of a bug - used for a piece
+of software, this can only mean luck :-)
+
+I initially wanted to call it "Special Agent MOSo", but I guess
+that is a little too silly :-)
+
+- Wei-ju Wu, November 12, 2009
+

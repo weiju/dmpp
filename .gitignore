@@ -1,0 +1,11 @@
+target
+.manager
+.DS_Store
+lib
+lib_managed
+UndocumentedHRM
+TODO
+STATUS
+DEVELOPERS
+scala/project/boot
+
