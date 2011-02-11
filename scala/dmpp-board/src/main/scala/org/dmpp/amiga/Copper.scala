@@ -43,31 +43,44 @@ object Copper {
 class Copper extends DmaChannel {
   import Copper._
 
-  private var pc            = 0
+  case class CopperPosition(hp: Int, vp: Int, he: Int, ve: Int)
+
   private var cop1lc        = 0
   private var cop2lc        = 0
-  private var danger        = false
+  private var ir1           = 0
+  private var ir2           = 0
   private var _video: Video = null
-  
+
   // wait status
   private var blitterFinishedDisable = false
   private var comparePos = 0
   private var compareMask = 0
+
+  // public accessible state
   var addressSpace : AddressSpace = null
-  var waiting = false
+  var waiting : Boolean           = false
+  var danger  : Boolean           = false
+  var pc            = 0
 
   def video = _video
   def video_=(aVideo: Video) {
     _video = aVideo
     _video.copper = this
   }
-  
-  def restart {
-    pc = cop1lc
+
+  override def reset {
+    super.reset
     waiting = false
+    danger  = false
+  }
+
+  def restartOnVerticalBlank {
+    pc      = cop1lc
+    waiting = false
+    enabled = false
   }
   
-  def positionReached: Boolean = {
+  private def positionReached: Boolean = {
     // merge the beam position into one word for fast comparison
     val currentPos =
       (((_video.vpos & 0xff) << 8) | (_video.hclocks & 0xff)) & compareMask
@@ -79,49 +92,62 @@ class Copper extends DmaChannel {
     currentPos >= comparePos
   }
 
-  
   override def doDma: Int = {
     if (!enabled) return 0
-    if (waiting) {
-      if (positionReached) {
-        println("Copper: VIDEO BEAM POSITION REACHED, WAKING UP !!!")
-        waiting = false
-        return NumWakeupCycles
-      } else return NumWaitingCycles // no cycles consumed
-    }
-    // fetch
-    val ir1 = addressSpace.readShort(pc)
-    val ir2 = addressSpace.readShort(pc + 2)
-    pc += 4
-    if ((ir1 & 0x01) == 0) move(ir1, ir2)
-    else {
-      compareMask = (ir2 & 0xffff) | 0x8001 
-      comparePos = ir1 & compareMask
-      val hp = ir1 & 0xfe
-      val vp = (ir1 >>> 8) & 0xff
-      val he = ir2 & 0xfe
-      val ve = (ir2 >>> 8) & 0x7f
-      blitterFinishedDisable = (ir2 & 0x8000) == 0x8000
-
-      if ((ir2 & 0x01) == 1) {
-        printf("Copper: SKIP HP=%d VP=%d HE=%d VE=%d BFD=%b\n",
-               hp, vp, he, ve, blitterFinishedDisable)
-        if (positionReached) pc += 4
-        return NumSkipCycles
-      } else {
-        printf("Copper: WAIT HP=%d VP=%d HE=%d VE=%d BFD=%b\n",
-               hp, vp, he, ve, blitterFinishedDisable)
-        waiting = true
-        return NumWaitCycles
-      }
+    if (waiting && !positionReached) NumWaitingCycles
+    else if (waiting && positionReached) {
+      println("Copper: VIDEO BEAM POSITION REACHED, WAKING UP !!!")
+      waiting = false
+      NumWakeupCycles
+    } else {
+      fetchNextInstruction
+      decideInstruction
     }
   }
 
-  private def move(ir1: Int, ir2: Int): Int = {
+  private def fetchNextInstruction {
+    ir1 = addressSpace.readShort(pc)
+    ir2 = addressSpace.readShort(pc + 2)
+    pc += 4
+  }
+
+  private def decideInstruction: Int = {
+    if ((ir1 & 0x01) == 0) move
+    else skipOrWait
+  }
+
+  private def skipOrWait: Int = {
+    compareMask = (ir2 & 0xffff) | 0x8001 
+    comparePos = ir1 & compareMask
+    blitterFinishedDisable = (ir2 & 0x8000) == 0x8000
+    val position = CopperPosition(hp = ir1 & 0xfe,
+                                  vp = (ir1 >>> 8) & 0xff,
+                                  he = ir2 & 0xfe,
+                                  ve = (ir2 >>> 8) & 0x7f)
+
+    if ((ir2 & 0x01) == 1) skip(position)
+    else wait(position)
+  }
+
+  private def move: Int = {
     val address = (ir1 & 0x1fe) + 0xdff000
     printf("Copper: MOVE #$%02x, $%04x\n", ir2, address)
     addressSpace.writeShort(address, ir2)
-    return NumMoveCycles
+    NumMoveCycles
+  }
+
+  private def skip(pos: CopperPosition): Int = {
+    printf("Copper: SKIP HP=%d VP=%d HE=%d VE=%d BFD=%b\n",
+           pos.hp, pos.vp, pos.he, pos.ve, blitterFinishedDisable)
+    if (positionReached) pc += 4
+    NumSkipCycles
+  }
+
+  private def wait(pos: CopperPosition): Int = {
+    printf("Copper: WAIT HP=%d VP=%d HE=%d VE=%d BFD=%b\n",
+           pos.hp, pos.vp, pos.he, pos.ve, blitterFinishedDisable)
+    waiting = true
+    NumWaitCycles
   }
 
   def cop1lch : ICustomChipReg = {
@@ -131,7 +157,7 @@ class Copper extends DmaChannel {
         throw new UnsupportedOperationException("READING COP1LCH NOT SUPPORTED")
       }
       def value_=(aValue: Int) {
-        cop1lc = (cop1lc & 0x0000ffff) | (aValue << 8)
+        cop1lc = (cop1lc & 0x0000ffff) | (aValue << 16)
       }
     }
   }
@@ -155,7 +181,7 @@ class Copper extends DmaChannel {
         throw new UnsupportedOperationException("READING COP2LCH NOT SUPPORTED")
       }
       def value_=(aValue: Int) {
-        cop2lc = (cop2lc & 0x0000ffff) | (aValue << 8)
+        cop2lc = (cop2lc & 0x0000ffff) | (aValue << 16)
       }
     }
   }
@@ -202,6 +228,8 @@ class Copper extends DmaChannel {
       def value: Int = {
         throw new UnsupportedOperationException("READING COPCON NOT SUPPORTED")
       }
+      // COPCON only has one supported bit: the DANGER bit.
+      // we simply map that to a boolean
       def value_=(aValue: Int) { danger = (aValue & 0x02) == 0x02 }
     }
   }

@@ -121,7 +121,7 @@ class Video(interruptController: InterruptController) {
         // vertical blank
         vpos = 0
         interruptController.intreq.value = 1 << 5
-        copper.restart
+        copper.restartOnVerticalBlank
         System.out.println("VERTICAL BLANK !!!!");
       }
       hpos = 0

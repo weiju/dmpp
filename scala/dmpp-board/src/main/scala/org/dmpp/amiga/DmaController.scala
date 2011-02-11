@@ -35,6 +35,9 @@ class DmaChannel {
    * @return number of DMA cycles used
    */
   def doDma: Int = 0
+  def reset {
+    enabled = false
+  }
 }
 
 class DmaController {
