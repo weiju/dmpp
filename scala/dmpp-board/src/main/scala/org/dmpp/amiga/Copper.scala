@@ -84,6 +84,8 @@ class Copper extends DmaChannel {
     // merge the beam position into one word for fast comparison
     val currentPos =
       (((_video.vpos & 0xff) << 8) | (_video.hclocks & 0xff)) & compareMask
+    printf("positionReached(), comparing currentPos = %d with comparePos: %d\n",
+           currentPos, comparePos)
     if (currentPos >= comparePos) {
       printf("Copper: comparison ok, current: %04x comp: %04x, vpos: %02x " +
              "hpos: %02x\n",

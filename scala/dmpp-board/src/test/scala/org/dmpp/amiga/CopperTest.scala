@@ -45,6 +45,9 @@ class CopperListMemory extends AddressSpace {
   }
 }
 
+class MockVideo extends Video(null) {
+}
+
 /**
  * A test for Copper functionality.
  */
@@ -53,12 +56,15 @@ object CopperSpec extends Specification {
   val NoCyclesUsed = 0
 
   val mockMemory = new CopperListMemory
+  var mockVideo: MockVideo = null
   var copper: Copper = null
 
   "Copper" should {
     doBefore {
+      mockVideo = new MockVideo
       copper = new Copper
       copper.addressSpace = mockMemory
+      copper.video = mockVideo
     }
     "have a valid initial state" in {
       copper.addressSpace must notBeNull
@@ -98,6 +104,25 @@ object CopperSpec extends Specification {
       mockMemory.writeLog.length must_== 1
       mockMemory.writeLog(0) must_== "#2.w -> $dff0e0"
     }
+
+    "will execute a wait instruction" in {
+      // another copper instruction in the HRM: wait for line 150
+      val copperList = CopperList(0x20000, List(0x9601, 0xff00))
+      addCopperListAndRestart(copperList)
+
+      copper.doDma must_== Copper.NumWaitCycles
+      mockMemory.writeLog.length must_== 0
+      copper.waiting must beTrue
+
+      // subsequent dma cycles should do nothing
+      copper.doDma must_== Copper.NumWaitingCycles
+
+      mockVideo.vpos = 150
+      copper.doDma must_== Copper.NumWakeupCycles
+    }
+
+    // TODO: What if a wait instruction is executed when the position is already
+    // reached ??? should we be waiting or simply continue ?
   }
 
   private def addCopperListAndRestart(copperList: CopperList) {
