@@ -4,6 +4,8 @@ import java.awt._
 import javax.swing._
 import java.awt.event._
 
+import org.dmpp.amiga._
+
 case class ScreenRect(x: Int, y: Int, width: Int, height: Int)
 
 object PlayfieldCanvas {
@@ -59,7 +61,7 @@ extends JComponent {
   val beam = new VideoBeam(videoStandard)
   val dmaViewHeight = 80
   val screen = ScreenRect(30, 35,
-                          videoStandard.PixelsPerLine * HiresFactor,
+                          videoStandard.CpuCyclesPerScanline * HiresFactor,
                           videoStandard.LinesTotal * HiresFactor)
   def canvasWidth  = screen.width + 60
   def canvasHeight = screen.height + dmaViewHeight + 30

@@ -83,7 +83,7 @@ class Amiga extends AddressSpace {
   val floppyController    = new FloppyController
   val interruptController = new InterruptController
   val dmaController       = new DmaController
-  val video               = new Video(interruptController)
+  val video               = new Video(NTSC, interruptController)
   val addressMap          = new Array[AddressSpace](AddressBanks)
 
   // It is useful to be able to access CIA, custom chips and chip memory
@@ -249,8 +249,6 @@ class Amiga extends AddressSpace {
    */
   def doCycles(numCycles: Int) {
     video.doCycles(numCycles)
-    // Until we really understand what happens, pulse each CIA counter pin
-    // separately
     ciaA.pulseAll(numCycles)
     ciaB.pulseAll(numCycles)
     dmaController.doDmaWithCpu(numCycles)

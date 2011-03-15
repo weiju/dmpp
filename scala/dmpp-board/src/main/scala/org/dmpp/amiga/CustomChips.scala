@@ -113,10 +113,10 @@ class BplCon3(video: Video) extends VideoWriteRegister("BPLCON3", video) {
   def value_=(aValue: Int) { video.bplcon3 = aValue }
 }
 class Bpl1Mod(video: Video) extends VideoWriteRegister("BPL1MOD", video) {
-  def value_=(aValue: Int) { video.bpl1Mod = aValue }
+  def value_=(aValue: Int) { video.bpl1mod = aValue }
 }
 class Bpl2Mod(video: Video) extends VideoWriteRegister("BPL2MOD", video) {
-  def value_=(aValue: Int) { video.bpl2Mod = aValue }
+  def value_=(aValue: Int) { video.bpl2mod = aValue }
 }
 class DiwStrt(video: Video) extends VideoWriteRegister("DIWSTRT", video) {
   def value_=(aValue: Int) { video.diwstrt = aValue }

@@ -6,6 +6,8 @@ import java.awt.event._
 import javax.swing.event._
 import javax.swing.border._
 
+import org.dmpp.amiga._
+
 object Main {
   val diwStrtField = new JTextField(5)
   val diwStopField = new JTextField(5)

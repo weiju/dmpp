@@ -45,19 +45,62 @@ package org.dmpp.amiga
 // - on NTSC it is 0 to (19 + DIWSTRT[VSTART]), meaning that the visible
 //   range on NTSC is 20 to 261 (241 lines)
 //   => overshoot of 1 scan line
-
-object Video {
-  val NumLines_PAL   = 312
-  val MinVStart_PAL  =  25
-  val NumLines_NTSC  = 262
-  val MinVStart_NTSC =  20
-
+trait VideoStandard {
   // 455 clock cycles per scanline, both on PAL and NTSC
   // DMA clock cycles are half of that and only reach until 228 ($E4),
   // but it's only a matter of a right shift to convert it
   // VHPOSR's values are measured in DMA clocks, so they will fit in
   // the 8 bit reserved for it
-  val CpuCyclesPerScanline = 455
+  // The copper can see beam positions $00 to $E2 (0-226), which are available in both
+  // PAL/NTSC, for a total of 227 positions. In addition, the Copper can only see even
+  // positions. Each copper beam position unit equals 2 lores/4 hires pixels,
+  // meaning a display has 227.5 * 2 = 455 lores pixels = 910 hires pixels
+  // Horizontal blanking is from 0x0f (pixel 30) to 0x35 (pixel 106)
+  val CpuCyclesPerScanline = 455 // = 227.5 color clocks
+
+  def VbStart                   : Int
+  def VbStop                    : Int
+  def LinesTotal                : Int
+  def DisplayableLines          : Int
+  def MinVStart                 : Int
+  def LinesTotalInterlace       : Int
+  def DisplayableLinesInterlace : Int
+}
+
+object NTSC extends VideoStandard {
+  val VbStart          = 0
+  val VbStop           = 21
+  val LinesTotal       = 262
+  val DisplayableLines = 241 // LinesTotal - |VbStop - VbStart|
+  val MinVStart        = 20
+  val LinesTotalInterlace       = 524
+  val DisplayableLinesInterlace = 483
+}
+object PAL extends VideoStandard {
+  val VbStart          = 0
+  val VbStop           = 29
+  val LinesTotal       = 312 
+  val DisplayableLines = 283 // LinesTotal - |VbStop - VbStart|
+  val MinVStart        = 25
+  val LinesTotalInterlace       = 625
+  val DisplayableLinesInterlace = 567
+}
+
+class VideoBeam(videoStandard: VideoStandard) {
+  var hpos           = 0
+  var vpos           = 0
+  // This funny expression ensures that even line return 227 and odd lines
+  // return 228 clocks
+  def hclocks = (hpos >>> 1) + (vpos & 0x000000001)
+
+  def advance(pixels: Int) {
+    hpos += pixels
+    if (hpos > videoStandard.CpuCyclesPerScanline) {
+      vpos += 1
+      hpos -= videoStandard.CpuCyclesPerScanline
+      if (vpos >= videoStandard.LinesTotal) vpos = 0
+    }
+  }
 }
 
 /*
@@ -76,18 +119,28 @@ object Video {
  * from 0 to (455 - 1) (= 227.5 * 2) horizontally
  * and from 0 to (312 - 1) (PAL) or 262 (NTSC) vertically
  */
-class Video(interruptController: InterruptController) {
-  import Video._
+class Video(videoStandard: VideoStandard,
+            interruptController: InterruptController) {
 
-  var hpos = 0
-  var vpos = 0
-  var minVStart = MinVStart_NTSC
-  var numTotalScanLines = NumLines_NTSC
+  val videoBeam = new VideoBeam(videoStandard)
+  def hpos = videoBeam.hpos
+  def vpos = videoBeam.vpos
+  def hclocks = videoBeam.hclocks
 
-  // This funny expression ensures that even line return 227 and odd lines
-  // return 228 clocks
-  def hclocks = (hpos >>> 1) + (vpos & 0x000000001)
+  var ddfstrt = 0
+  var ddfstop  = 0
+  var diwstrt = 0
+  var diwstop  = 0
+  var bplcon0  = 0
+  var bplcon1  = 0
+  var bplcon2  = 0
+  var bplcon3  = 0
+  var bpl1mod  = 0
+  var bpl2mod  = 0
 
+/*
+  var minVStart = videoStandard.MinVStart
+  var numTotalScanLines = videoStandard.LinesTotal
   // Display mode
   var hiresMode            = false
   var bitplaneUseCode      = 0
@@ -108,12 +161,15 @@ class Video(interruptController: InterruptController) {
   var playfield2PriorityCode = 0
   var bpl1Mod = 0
   var bpl2Mod = 0
-  
+*/
   var copper: Copper = null
 
   def doCycles(numCycles: Int) = {
+    videoBeam.advance(numCycles)
+    // TODO: handle vertical blanking, see below
+/*
     hpos += numCycles
-    if (hpos > CpuCyclesPerScanline) {
+    if (hpos > videoStandard.CpuCyclesPerScanline) {
       vpos += 1
       if (vpos == minVStart) { // should be diwstart
         // no vertical blank
@@ -125,9 +181,9 @@ class Video(interruptController: InterruptController) {
         System.out.println("VERTICAL BLANK !!!!");
       }
       hpos = 0
-    }
+    }*/
   }
-
+/*
   def bplcon0 = 0
   def bplcon0_=(value : Int) {
     hiresMode            = (value & 0x8000) == 0x8000
@@ -202,4 +258,5 @@ class Video(interruptController: InterruptController) {
   }
 
   private def bool2Str(flag: Boolean) = if (flag) "on" else "off"
+  */
 }

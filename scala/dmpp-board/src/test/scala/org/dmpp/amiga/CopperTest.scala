@@ -45,7 +45,7 @@ class CopperListMemory extends AddressSpace {
   }
 }
 
-class MockVideo extends Video(null) {
+class MockVideo extends Video(NTSC, null) {
 }
 
 /**
@@ -117,7 +117,7 @@ object CopperSpec extends Specification {
       // subsequent dma cycles should do nothing
       copper.doDma must_== Copper.NumWaitingCycles
 
-      mockVideo.vpos = 150
+      mockVideo.videoBeam.vpos = 150
       copper.doDma must_== Copper.NumWakeupCycles
     }
 
