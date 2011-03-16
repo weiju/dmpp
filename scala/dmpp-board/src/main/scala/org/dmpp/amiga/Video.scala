@@ -124,7 +124,7 @@ class VideoBeam(videoStandard: VideoStandard,
  * from 0 to (455 - 1) (= 227.5 * 2) horizontally
  * and from 0 to (312 - 1) (PAL) or 262 (NTSC) vertically
  */
-class Video(videoStandard: VideoStandard,
+class Video(val videoStandard: VideoStandard,
             interruptController: InterruptController) {
 
   val videoBeam = new VideoBeam(videoStandard, notifyVerticalBlank _)

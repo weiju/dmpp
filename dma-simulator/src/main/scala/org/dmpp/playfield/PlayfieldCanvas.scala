@@ -54,13 +54,24 @@ class InfoPanel(x: Int, y: Int) {
   }
 }
 
-class PlayfieldCanvas(videoStandard: VideoStandard, playfield: Playfield)
+class PlayfieldCanvas(video: Video)
 extends JComponent {
   import PlayfieldCanvas._
 
-  val beam = new VideoBeam(videoStandard, () => {
-    println("Vertical Blank !!!")
-  })
+  def videoStandard = video.videoStandard
+  def beam = video.videoBeam
+  def playfieldLeft = video.diwstrt & 0xff
+  def playfieldTop  = (video.diwstrt >>> 8) & 0xff 
+  def playfieldRight = (video.diwstop & 0xff) | 0x100
+  // TODO: positions > 0xff
+  def playfieldBottom = ((video.diwstop >>> 8) & 0xff)
+  def playfieldWidth  = playfieldRight - playfieldLeft
+  def playfieldHeight = playfieldBottom - playfieldTop
+
+  def ddfLeft = video.ddfstrt & 0xff
+  def ddfRight = video.ddfstop & 0xff
+  def ddfWidth = (ddfRight - ddfLeft)
+
   val dmaViewHeight = 80
   val screen = ScreenRect(30, 35,
                           videoStandard.CpuCyclesPerScanline * HiresFactor,
@@ -135,18 +146,18 @@ extends JComponent {
   }
   private def drawDisplayWindow(g: Graphics) {
     g.setColor(Color.YELLOW)
-    g.drawRect(screen.x + playfield.left * HiresFactor,
-               screen.y + playfield.top * HiresFactor,
-               playfield.width * HiresFactor,
-               playfield.height * HiresFactor)
+    g.drawRect(screen.x + playfieldLeft * HiresFactor,
+               screen.y + playfieldTop * HiresFactor,
+               playfieldWidth * HiresFactor,
+               playfieldHeight * HiresFactor)
   }
   private def drawBitmapDmaArea(g: Graphics) {
     // DDFSTRT/DDFSTOP
     g.setColor(Red)
-    g.drawRect(screen.x + playfield.ddfLeft * LoresPixelsPerCycle * HiresFactor,
-               screen.y + playfield.top * HiresFactor,
-               playfield.ddfWidth * LoresPixelsPerCycle * HiresFactor,
-               playfield.height * HiresFactor)
+    g.drawRect(screen.x + ddfLeft * LoresPixelsPerCycle * HiresFactor,
+               screen.y + playfieldTop * HiresFactor,
+               ddfWidth * LoresPixelsPerCycle * HiresFactor,
+               playfieldHeight * HiresFactor)
   }
   private def drawBeam(g: Graphics) {
     val beamx = screen.x + beam.hpos * HiresFactor
@@ -172,8 +183,8 @@ extends JComponent {
                  "clock: $%02x | win w: %d h: %d |").format(beam.hpos, beam.hpos,
                                                             beam.vpos, beam.vpos,
                                                             beam.hpos / 2,
-                                                            playfield.width,
-                                                            playfield.height),
+                                                            playfieldWidth,
+                                                            playfieldHeight),
                  beamInfoX, beamInfoY)
   }
 }
