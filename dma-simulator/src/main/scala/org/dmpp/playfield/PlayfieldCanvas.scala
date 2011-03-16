@@ -58,7 +58,9 @@ class PlayfieldCanvas(videoStandard: VideoStandard, playfield: Playfield)
 extends JComponent {
   import PlayfieldCanvas._
 
-  val beam = new VideoBeam(videoStandard)
+  val beam = new VideoBeam(videoStandard, () => {
+    println("Vertical Blank !!!")
+  })
   val dmaViewHeight = 80
   val screen = ScreenRect(30, 35,
                           videoStandard.CpuCyclesPerScanline * HiresFactor,

@@ -86,9 +86,11 @@ object PAL extends VideoStandard {
   val DisplayableLinesInterlace = 567
 }
 
-class VideoBeam(videoStandard: VideoStandard) {
+class VideoBeam(videoStandard: VideoStandard,
+                notifyVerticalBlank: () => Unit) {
   var hpos           = 0
   var vpos           = 0
+
   // This funny expression ensures that even line return 227 and odd lines
   // return 228 clocks
   def hclocks = (hpos >>> 1) + (vpos & 0x000000001)
@@ -98,7 +100,10 @@ class VideoBeam(videoStandard: VideoStandard) {
     if (hpos > videoStandard.CpuCyclesPerScanline) {
       vpos += 1
       hpos -= videoStandard.CpuCyclesPerScanline
-      if (vpos >= videoStandard.LinesTotal) vpos = 0
+      if (vpos >= videoStandard.LinesTotal) {
+        vpos = 0
+        notifyVerticalBlank() // note: the () must be added to call the method
+      }
     }
   }
 }
@@ -122,141 +127,47 @@ class VideoBeam(videoStandard: VideoStandard) {
 class Video(videoStandard: VideoStandard,
             interruptController: InterruptController) {
 
-  val videoBeam = new VideoBeam(videoStandard)
-  def hpos = videoBeam.hpos
-  def vpos = videoBeam.vpos
-  def hclocks = videoBeam.hclocks
+  val videoBeam = new VideoBeam(videoStandard, notifyVerticalBlank _)
+  def hpos      = videoBeam.hpos
+  def vpos      = videoBeam.vpos
+  def hclocks   = videoBeam.hclocks
 
-  var ddfstrt = 0
+  var ddfstrt  = 0
   var ddfstop  = 0
-  var diwstrt = 0
+  var diwstrt  = 0
   var diwstop  = 0
   var bplcon0  = 0
   var bplcon1  = 0
   var bplcon2  = 0
-  var bplcon3  = 0
+  var bplcon3  = 0 // ECS register TODO
   var bpl1mod  = 0
   var bpl2mod  = 0
 
-/*
-  var minVStart = videoStandard.MinVStart
-  var numTotalScanLines = videoStandard.LinesTotal
-  // Display mode
-  var hiresMode            = false
-  var bitplaneUseCode      = 0
-  var holdAndModifyMode    = false
-  var doublePlayfieldMode  = false
-  var compositeColorEnable = false
-  // might not belong here, but is in BPLCON0, so for now, we are fine
-  // we do not support genlocks anyways
-  var genlockAudioEnable   = false
-  var lightpenEnable       = false
-  var interlaceMode        = false
-  var externalResync       = false
-  // playfield settings
-  var playfield1HScrollCode  = 0
-  var playfield2HScrollCode  = 0
-  var playfield2Priority     = false
-  var playfield1PriorityCode = 0
-  var playfield2PriorityCode = 0
-  var bpl1Mod = 0
-  var bpl2Mod = 0
-*/
+  // BPLCON0 derived values
+  def hiresMode              = (bplcon0 & 0x8000) == 0x8000
+  def holdAndModifyMode      = (bplcon0 & 0x800)  == 0x800
+  def dualPlayfieldMode      = (bplcon0 & 0x400)  == 0x400
+  def compositeColorEnable   = (bplcon0 & 0x200)  == 0x200
+  def interlaceMode          = (bplcon0 & 0x04)   == 0x04
+  def bitplaneUseCode        = (bplcon0 >> 12) & 0x07
+
+  // BPLCON1 derived values
+  def playfield2HScrollCode  = (bplcon1 >> 4) & 0x0f
+  def playfield1HScrollCode  = bplcon1 & 0x0f
+
+  // BPLCON2 derived values
+  def playfield2Priority     = (bplcon2 & 0x40) == 0x40
+  def playfield2PriorityCode = (bplcon2 >> 3) & 0x07
+  def playfield1PriorityCode = bplcon2 & 0x07
+
   var copper: Copper = null
 
   def doCycles(numCycles: Int) = {
     videoBeam.advance(numCycles)
-    // TODO: handle vertical blanking, see below
-/*
-    hpos += numCycles
-    if (hpos > videoStandard.CpuCyclesPerScanline) {
-      vpos += 1
-      if (vpos == minVStart) { // should be diwstart
-        // no vertical blank
-      } else if (vpos == numTotalScanLines) {
-        // vertical blank
-        vpos = 0
-        interruptController.intreq.value = 1 << 5
-        copper.restartOnVerticalBlank
-        System.out.println("VERTICAL BLANK !!!!");
-      }
-      hpos = 0
-    }*/
   }
-/*
-  def bplcon0 = 0
-  def bplcon0_=(value : Int) {
-    hiresMode            = (value & 0x8000) == 0x8000
-    bitplaneUseCode      = (value >> 12) & 0x07
-    holdAndModifyMode    = (value & 0x800) == 0x800
-    doublePlayfieldMode  = (value & 0x400) == 0x400
-    compositeColorEnable = (value & 0x200) == 0x200
-    genlockAudioEnable   = (value & 0x100) == 0x100
-    lightpenEnable       = (value & 0x08)  == 0x08
-    interlaceMode        = (value & 0x04)  == 0x04
-    externalResync       = (value & 0x02)  == 0x02
-    printf("[BPLCON0: HIRES = %s BPU = %d, HAM = %s, DPF = %s, COMP = %s, " +
-         "GAUD = %s, LPEN = %s, LACE = %s, ERSY = %s]\n", bool2Str(hiresMode),
-         bitplaneUseCode, bool2Str(holdAndModifyMode),
-         bool2Str(doublePlayfieldMode), bool2Str(compositeColorEnable),
-         bool2Str(genlockAudioEnable), bool2Str(lightpenEnable),
-         bool2Str(interlaceMode), bool2Str(externalResync))
+  private def notifyVerticalBlank {
+    println("VERTICAL BLANK !!!!");
+    if (interruptController != null) interruptController.intreq.value = 1 << 5
+    if (copper != null) copper.restartOnVerticalBlank
   }
-
-  def bplcon1 = 0
-  def bplcon1_=(value : Int) {
-    playfield2HScrollCode = (value >> 4) & 0x0f
-    playfield1HScrollCode = value & 0x0f
-    printf("[BPLCON1: PF1H = %02x, PF2H = %02x]\n", playfield1HScrollCode,
-           playfield2HScrollCode)
-  }
-  
-  def bplcon2 = 0
-  def bplcon2_=(value : Int) {
-    playfield2Priority = (value & 0x40) == 0x40
-    playfield2PriorityCode = (value >> 3) & 0x07
-    playfield1PriorityCode = value & 0x07
-    printf("[BPLCON2: PF2_PRIO = %s, PF1P = %d, PF2P = %d]\n",
-           bool2Str(playfield2Priority), playfield1PriorityCode,
-           playfield2PriorityCode)
-  }
-
-  def bplcon3  = 0
-  def bplcon3_=(value: Int)  = {
-    // TODO: This is a new ECS register, ignore it for now
-    printf("[TODO] Setting BPLCON3 to value: %02x\n", value)
-  }
-
-  def diwstrt = 0
-  def diwstrt_=(value: Int) {
-    val vertical = (value >>> 8) & 0xff
-    val horizontal = value & 0xff
-    // TODO assign to something
-    printf("[DIWSTRT: VERT = %d HORZ = %d]\n", vertical, horizontal)
-  }
-
-  def diwstop = 0
-  def diwstop_=(value: Int) {
-    val vertical = (value >>> 8) & 0xff
-    val horizontal = value & 0xff
-    // TODO assign to something
-    printf("[DIWSTOP: VERT = %d HORZ = %d]\n", vertical, horizontal)
-  }
-
-  def ddfstrt = 0
-  def ddfstrt_=(value: Int) {
-    val horizontal = value & 0xfc
-    // TODO assign to something
-    printf("[DDFSTRT: HORZ = %d]\n", horizontal)
-  }
-
-  def ddfstop = 0
-  def ddfstop_=(value: Int) {
-    val horizontal = value & 0xfc
-    // TODO assign to something
-    printf("[DDFSTOP: HORZ = %d]\n", horizontal)
-  }
-
-  private def bool2Str(flag: Boolean) = if (flag) "on" else "off"
-  */
 }

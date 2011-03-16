@@ -1,6 +1,6 @@
 import sbt._
 
-class DmppProject(info: ProjectInfo) extends DefaultProject(info) {
+class DmppProject(info: ProjectInfo) extends ParentProject(info) {
   val mavenLocal = "Local Maven Reository" at "file://" +
     (Path.userHome / ".m2" / "repository").absolutePath
   val mahatma68k = "org.mahatma68k" % "mahatma68k" % "1.0-SNAPSHOT" % "compile->default"
