@@ -8,5 +8,6 @@ class DmppProject(info: ProjectInfo) extends ParentProject(info) {
 
   lazy val cymus = project("dmpp-cymus", "dmpp-cymus")
   lazy val board = project("dmpp-board", "dmpp-board", cymus)
+  lazy val debugger = project("dmpp-debugger", "dmpp-debugger", cymus, board)
 }
 

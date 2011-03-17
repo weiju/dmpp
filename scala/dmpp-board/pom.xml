@@ -109,23 +109,23 @@
             <arg>-target:jvm-1.5</arg>
             <arg>-deprecation</arg>
           </args>
-	  <!--
-	      Simply run this Scala project with
-	      mvn scala:run
-	  -->
-	  <launchers>
-	    <launcher>
-	      <id>stdrun</id>
-	      <mainClass>org.dmpp.amiga.AmigaMain</mainClass>
-	      <args>
-					<arg>/Users/weiju/Development/amiga-roms/kick12.rom</arg>
-	      </args>
-	      <jvmArgs>
-		      <jvmArg>-Xmx512m</jvmArg>
-					<jvmArg>-DUSE_DEBUGGER=false</jvmArg>
-	      </jvmArgs>
-	    </launcher>
-	  </launchers>
+          <!--
+              Simply run this Scala project with
+              mvn scala:run
+          -->
+          <launchers>
+            <launcher>
+              <id>stdrun</id>
+              <mainClass>org.dmpp.amiga.AmigaMain</mainClass>
+              <args>
+                <arg>/Users/weiju/Development/amiga-roms/kick12.rom</arg>
+              </args>
+              <jvmArgs>
+                <jvmArg>-Xmx512m</jvmArg>
+                <jvmArg>-DUSE_DEBUGGER=false</jvmArg>
+              </jvmArgs>
+            </launcher>
+          </launchers>
         </configuration>
       </plugin>
     </plugins>

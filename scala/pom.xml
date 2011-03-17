@@ -17,5 +17,6 @@
   <modules>
     <module>dmpp-cymus</module>
     <module>dmpp-board</module>
+    <module>dmpp-debugger</module>
   </modules>
 </project>
