@@ -195,5 +195,5 @@ class Copper extends DmaChannel {
   }
   // We do not implement COPINS. It is not clear if it is ever used. For now,
   // we will throw an exception on access
-  val COPINS = new CustomChipBogusRegister("COPINS")
+  val COPINS = BogusRegister("COPINS")
 }

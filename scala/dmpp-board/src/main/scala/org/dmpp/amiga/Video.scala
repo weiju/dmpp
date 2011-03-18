@@ -126,15 +126,20 @@ class VideoBeam(videoStandard: VideoStandard,
  */
 class Video(val videoStandard: VideoStandard,
             interruptController: InterruptController) {
+  class ColorRegister(n: Int) extends CustomChipWriteRegister("COLOR%02d".format(n)) {
+    def value_=(value: Int) {
+      color(n) = value
+    }
+  }
 
   val videoBeam = new VideoBeam(videoStandard, notifyVerticalBlank _)
   def hpos      = videoBeam.hpos
   def vpos      = videoBeam.vpos
   def hclocks   = videoBeam.hclocks
 
-  // color registers what we actually do here is to store a 24bit RGB
-  // value here
   val color = new Array[Int](32)
+  val COLOR = new Array[ColorRegister](32)
+  for (i <- 0 until 32) COLOR(i) = new ColorRegister(i)
 
   // playfield registers
   var ddfstrt  = 0
