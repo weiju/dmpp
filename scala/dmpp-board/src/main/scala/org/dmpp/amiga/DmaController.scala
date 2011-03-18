@@ -96,34 +96,36 @@ class DmaController {
   }
   
   // expose the control register here
-  def dmacon: ICustomChipReg = {
-    new ICustomChipReg {
-      def name = "DMACONR"
-      def value = {
-        var result = 0
-        for (i <- 0 to 8) {
-          if (_dmaChannels(i).enabled) result |= (1 << i)
-        }
-        if (masterEnable) result |= 0x200
-        result
+  val DMACON = new CustomChipWriteRegister("DMACON") {
+    def value_=(aValue: Int) {
+      var mask = 0
+      for (i <- 0 to 8) {
+        mask = 1 << i
+        _dmaChannels(i).enabled = (aValue & mask) == mask
       }
-      def value_=(aValue: Int) {
-        var mask = 0
-        for (i <- 0 to 8) {
-          mask = 1 << i
-          _dmaChannels(i).enabled = (aValue & mask) == mask
-        }
-        masterEnable = ((aValue & 0x200) == 0x200)
-        println("DMACON:" + toString)
-      }
-      override def toString() = {
-        "master=%b au3=%b au2=%b au1=%b au0=%b dsk=%b spr=%b blt=%b cop=%b " +
-        "bpl=%b".format(
-          masterEnable, audio3.enabled, audio2.enabled,
-          audio1.enabled, audio0.enabled, disk.enabled,
-          sprite.enabled, blitter.enabled,
-          copper.enabled, bitplane.enabled)
-      }
+      masterEnable = ((aValue & 0x200) == 0x200)
+      println("DMACON:" + toString)
     }
+    override def toString = DmaController.this.toString
+  }
+  val DMACONR = new CustomChipReadRegister("DMACONR") {
+    def value = {
+      var result = 0
+      for (i <- 0 to 8) {
+        if (_dmaChannels(i).enabled) result |= (1 << i)
+      }
+      if (masterEnable) result |= 0x200
+      result
+    }
+    override def toString = DmaController.this.toString
+  }
+
+  override def toString() = {
+    "master=%b au3=%b au2=%b au1=%b au0=%b dsk=%b spr=%b blt=%b cop=%b " +
+    "bpl=%b".format(
+      masterEnable, audio3.enabled, audio2.enabled,
+      audio1.enabled, audio0.enabled, disk.enabled,
+      sprite.enabled, blitter.enabled,
+      copper.enabled, bitplane.enabled)
   }
 }

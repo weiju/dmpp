@@ -195,13 +195,13 @@ class Amiga extends AddressSpace {
     ciaA.setIrqListener(new IrqListener {
       def irqRequested {
         // delegate to interrupt controller for CIA-A (Bit 3)
-        interruptController.intreq.value = 1 << 3
+        interruptController.INTREQ.value = 1 << 3
       }
     })
     ciaB.setIrqListener(new IrqListener {
       def irqRequested {
         // delegate to interrupt controller for CIA-B (Bit 13)
-        interruptController.intreq.value = 1 << 13
+        interruptController.INTREQ.value = 1 << 13
       }
     })
     // Initial component states

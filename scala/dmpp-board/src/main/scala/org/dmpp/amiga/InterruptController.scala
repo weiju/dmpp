@@ -34,20 +34,21 @@ import org.mahatma68k.InterruptAcknowledge.VectorType
  * The InterruptController holds the enable and request masks.
  */
 class InterruptController extends InterruptAcknowledge {
-  private var _intena = 0
-  private var _intreq = 0
+  var intena = 0
+  var intreq = 0
   var cpu: Cpu = null
-  val intena = new ICustomChipReg {
-    def name = "INTENA_REG"
-    def value_=(value: Int) { _intena = value }
-    def value = _intena
+
+  val INTENA = new CustomChipWriteRegister("INTENA") {
+    def value_=(value: Int) { intena = value }
   }
-  val intreq = new ICustomChipReg {
-    def name = "INTREQ_REG"
+  val INTENAR = new CustomChipReadRegister("INTENAR") {
+    def value = intena
+  }
+  val INTREQ = new CustomChipWriteRegister("INTREQ") {
     def value_=(value: Int) {
-      _intreq = value
+      intreq = value
       val mask = 0x4000 | value;
-      val enabled = (_intena & mask) == mask; 
+      val enabled = (intena & mask) == mask; 
       println("Interrupt request: " + value + " enabled: " + enabled)
       if (enabled) {
         // do interrupt request
@@ -56,7 +57,9 @@ class InterruptController extends InterruptAcknowledge {
         cpu.makeInterruptRequest(3, InterruptController.this)
       }
     }
-    def value = _intreq
+  }
+  val INTREQR = new CustomChipReadRegister("INTREQR") {
+    def value = intreq
   }
   def acknowledge(level: Int) = {
     VectorType.AUTOVECTOR

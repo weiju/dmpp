@@ -86,8 +86,8 @@ object CopperSpec extends Specification {
     }
     "will be ready to run copper list 1 after verticalBlank" in {
       // point to address 0x20000, which is in chip mem
-      copper.cop1lcl.value = 0x0000
-      copper.cop1lch.value = 0x0002
+      copper.COP1LCL.value = 0x0000
+      copper.COP1LCH.value = 0x0002
       copper.restartOnVerticalBlank
 
       copper.pc must_== 0x20000
@@ -127,8 +127,8 @@ object CopperSpec extends Specification {
 
   private def addCopperListAndRestart(copperList: CopperList) {
     mockMemory.addCopperList(copperList)
-    copper.cop1lcl.value = 0x0000
-    copper.cop1lch.value = 0x0002
+    copper.COP1LCL.value = 0x0000
+    copper.COP1LCH.value = 0x0002
     copper.restartOnVerticalBlank
     copper.enabled = true
   }

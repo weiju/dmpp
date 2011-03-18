@@ -172,7 +172,7 @@ class Video(val videoStandard: VideoStandard,
   }
   private def notifyVerticalBlank {
     println("VERTICAL BLANK !!!!");
-    if (interruptController != null) interruptController.intreq.value = 1 << 5
+    if (interruptController != null) interruptController.INTREQ.value = 1 << 5
     if (copper != null) copper.restartOnVerticalBlank
   }
 

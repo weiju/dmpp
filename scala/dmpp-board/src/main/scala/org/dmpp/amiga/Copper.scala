@@ -151,66 +151,27 @@ class Copper extends DmaChannel {
     waiting = true
     NumWaitCycles
   }
-
-  def cop1lch : ICustomChipReg = {
-    new ICustomChipReg {
-      def name = "COP1LCH"
-      def value: Int = {
-        throw new UnsupportedOperationException("READING COP1LCH NOT SUPPORTED")
-      }
-      def value_=(aValue: Int) {
-        cop1lc = (cop1lc & 0x0000ffff) | (aValue << 16)
-      }
+  val COP1LCH = new CustomChipWriteRegister("COP1LCH") {
+    def value_=(aValue: Int) {
+      cop1lc = (cop1lc & 0x0000ffff) | (aValue << 16)
     }
   }
-  def cop1lcl : ICustomChipReg = {
-    new ICustomChipReg {
-      def name = "COP1LCL"
-      def value: Int = {
-        throw new UnsupportedOperationException("READING COP1LCL NOT SUPPORTED")
-      }
-      def value_=(aValue: Int) {
-        cop1lc = (cop1lc & 0xffff0000) | aValue
-        printf("COP1LC is now: %04x\n", cop1lc)
-      }
+  val COP1LCL = new CustomChipWriteRegister("COP1LCL") {
+    def value_=(aValue: Int) {
+      cop1lc = (cop1lc & 0xffff0000) | aValue
+      printf("COP1LC is now: %04x\n", cop1lc)
     }
   }
 
-  def cop2lch : ICustomChipReg = {
-    new ICustomChipReg {
-      def name = "COP2LCH"
-      def value : Int = {
-        throw new UnsupportedOperationException("READING COP2LCH NOT SUPPORTED")
-      }
-      def value_=(aValue: Int) {
-        cop2lc = (cop2lc & 0x0000ffff) | (aValue << 16)
-      }
+  val COP2LCH = new CustomChipWriteRegister("COP2LCH") {
+    def value_=(aValue: Int) {
+      cop2lc = (cop2lc & 0x0000ffff) | (aValue << 16)
     }
   }
-  def cop2lcl : ICustomChipReg = {
-    new ICustomChipReg {
-      def name = "COP2LCL"
-      def value: Int = {
-        throw new UnsupportedOperationException("READING COP2LCL NOT SUPPORTED")
-      }
-      def value_=(aValue: Int) {
-        cop2lc = (cop2lc & 0xffff0000) | aValue
-        printf("COP2LC is now: %04x\n", cop2lc)
-      }
-    }
-  }
-
-  // STROBE REGISTERS
-  def copjmp1 : ICustomChipReg = {
-    new ICustomChipReg {
-      def name = "COPJMP1"
-      def value: Int = {
-        throw new UnsupportedOperationException("READING COPJMP1 NOT SUPPORTED")
-      }
-      def value_=(aValue: Int) {
-        pc = cop1lc
-        printf("Strobed COPJMP1, pc is now: %04x\n", pc)
-      }
+  val COP2LCL = new CustomChipWriteRegister("COP2LCL") {
+    def value_=(aValue: Int) {
+      cop2lc = (cop2lc & 0xffff0000) | aValue
+      printf("COP2LC is now: %04x\n", cop2lc)
     }
   }
 

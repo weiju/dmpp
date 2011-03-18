@@ -70,25 +70,6 @@ class CustomChipRegister(val name: String) extends ICustomChipReg {
   var value: Int = 0
 }
 
-class CustomChipRegisterR(val name: String, reg: ICustomChipReg)
-extends ICustomChipReg {
-  def value = reg.value
-  def value_=(value: Int) { throw new Exception("setValue() not allowed") }
-}
-class CustomChipRegisterW(val name: String, reg: ICustomChipReg)
-extends ICustomChipReg {
-  def value_=(aValue: Int) {
-    // set/clr
-    if ((aValue & 0x8000) == 0x8000) { // set bit set
-      reg.value |= (aValue & 0x7fff)
-    } else {
-      reg.value &= ~aValue
-    }
-    printf("REGISTER VALUE IS NOW: $%04x\n", reg.value & 0xffff)
-  }
-  def value = { throw new Exception("value() not allowed") }
-}
-
 // **********************************************************************
 // **** REGISTER ADDRESS SPACE
 // **********************************************************************
@@ -103,10 +84,6 @@ trait CustomChipChangeListener {
  * a single "super chip" and delegate some functionality which clearly
  * belongs to a subsystem (e.g. Copper, Blitter...)
  */
-object CustomChipRegisters {
-  val VPOSR  = 2
-  val VHPOSR = 3
-}
 class CustomAddressSpace(interruptController: InterruptController,
                          dmaController: DmaController,
                          video: Video, copper: Copper, blitter: Blitter)
@@ -115,16 +92,16 @@ extends AddressSpace {
   val NUM_REGISTERS  = 256 // this is actually the number of ECS registers
   
   val registers = Array[ICustomChipReg](
-    new CustomChipRegister("BLTDDAT"), 
-    new CustomChipRegisterR("DMACONR",  dmaController.dmacon),
+    new CustomChipRegister("BLTDDAT"),
+    dmaController.DMACONR,
     video.VPOSR,                        video.VHPOSR,
     new CustomChipRegister("DSKDATR"),  new CustomChipRegister("JOY0DAT"),
     new CustomChipRegister("JOY1DAT"),  new CustomChipRegister("CLXDAT"),
     new CustomChipRegister("ADKCONR"),  new CustomChipRegister("POT0DAT"),
     new CustomChipRegister("POT1DAT"),  new CustomChipRegister("POTGOR"),
     new CustomChipRegister("SERDATR"),  new CustomChipRegister("DSKBYTR"),
-    new CustomChipRegisterR("INTENAR",  interruptController.intena), 
-    new CustomChipRegisterR("INTREQR",  interruptController.intreq),
+    interruptController.INTENAR,
+    interruptController.INTREQR,
     new CustomChipRegister("DSKPTH"),   new CustomChipRegister("DSKPTL"),
     new CustomChipRegister("DSKLEN"),   new CustomChipRegister("DSKDAT"),
     new CustomChipRegister("REFPTR"),   new CustomChipRegister("VPOSW"),
@@ -133,13 +110,13 @@ extends AddressSpace {
     new CustomChipRegister("POTGO"),    new CustomChipRegister("JOYTEST"),
     new CustomChipRegister("STREQU"),   new CustomChipRegister("STRVBL"),
     new CustomChipRegister("STRHOR"),   new CustomChipRegister("STRLONG"),
-    blitter.bltcon0,                    blitter.bltcon1,
+    blitter.BLTCON0,                    blitter.BLTCON1,
     new CustomChipRegister("BLTAFWM"),  new CustomChipRegister("BLTALWM"),
     new CustomChipRegister("BLTCPTH"),  new CustomChipRegister("BLTCPTL"),
     new CustomChipRegister("BLTBPTH"),  new CustomChipRegister("BLTBPTL"),
     new CustomChipRegister("BLTAPTH"),  new CustomChipRegister("BLTAPTL"),
     new CustomChipRegister("BLTDPTH"),  new CustomChipRegister("BLTDPTL"),
-    blitter.bltsize,                    new CustomChipRegister("BLTCON0L"),
+    blitter.BLTSIZE,                    new CustomChipRegister("BLTCON0L"),
     new CustomChipRegister("BLTSIZV"),  new CustomChipRegister("BLTSIZH"),
     new CustomChipRegister("BLTCMOD"),  new CustomChipRegister("BLTBMOD"),
     new CustomChipRegister("BLTAMOD"),  new CustomChipRegister("BLTDMOD"),
@@ -150,16 +127,16 @@ extends AddressSpace {
     new CustomChipRegister("SPRHDAT"),  new CustomChipRegister("UNDEF05"),
     new CustomChipRegister("DENISEID"),
     new CustomChipRegister("DSKSYNC"), 
-    copper.cop1lch,                     copper.cop1lcl,
-    copper.cop2lch,                     copper.cop2lcl,
+    copper.COP1LCH,                     copper.COP1LCL,
+    copper.COP2LCH,                     copper.COP2LCL,
     copper.COPJMP1,                     copper.COPJMP2,
     copper.COPINS,
     video.DIWSTRT,                      video.DIWSTOP,
     video.DDFSTRT,                      video.DDFSTOP,
-    new CustomChipRegisterW("DMACON",   dmaController.dmacon),
+    dmaController.DMACON,
     new CustomChipRegister("CLXCON"),
-    new CustomChipRegisterW("INTENA",   interruptController.intena),
-    new CustomChipRegisterW("INTREQ",   interruptController.intreq),
+    interruptController.INTENA,
+    interruptController.INTREQ,
     new CustomChipRegister("ADKCON"),
     new CustomChipRegister("AUD0LCH"),  new CustomChipRegister("AUD0LCL"),
     new CustomChipRegister("AUD0LEN"),  new CustomChipRegister("AUD0PER"),

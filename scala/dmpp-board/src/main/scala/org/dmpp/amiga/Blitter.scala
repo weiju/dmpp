@@ -55,66 +55,46 @@ class Blitter {
     // DO work
   }
 
-  def printBltcon0 {
-    printf("SRC A SHIFT=%d f=%d USEA=%b USEB=%b USEC=%b USED=%b\n",
-           srcAShift, function, useA, useB, useC, useD)
-  }
-
-  def printBltcon1 {
-    printf("SRC B SHIFT=%d DOFF=%b EFE=%b IFE=%b FC=%b DESC=%b LINE=%b\n",
-           srcBShift, dOff, exclusiveFill, inclusiveFill, fillCarryInput,
-           descending, lineMode)
-  }
-
-  def bltcon0 : ICustomChipReg = {
-    new ICustomChipReg {
-      def name = "BLTCON0"
-      def value: Int = {
-        throw new UnsupportedOperationException("can not read from " + name)
-      }
-      def value_=(aValue: Int) {
-        srcAShift = (aValue >>> 24) & 0x0f
-        function = aValue & 0xff
-        useA = (aValue & 0x800) == 0x800
-        useB = (aValue & 0x400) == 0x400
-        useC = (aValue & 0x200) == 0x200
-        useD = (aValue & 0x100) == 0x100
-        printBltcon0
-      }
+  val BLTCON0 = new CustomChipWriteRegister("BLTCON0") {
+    def value_=(aValue: Int) {
+      srcAShift = (aValue >>> 24) & 0x0f
+      function = aValue & 0xff
+      useA = (aValue & 0x800) == 0x800
+      useB = (aValue & 0x400) == 0x400
+      useC = (aValue & 0x200) == 0x200
+      useD = (aValue & 0x100) == 0x100
+      printBltcon0
+    }
+    private def printBltcon0 {
+      printf("SRC A SHIFT=%d f=%d USEA=%b USEB=%b USEC=%b USED=%b\n",
+             srcAShift, function, useA, useB, useC, useD)
     }
   }
 
-  def bltcon1 : ICustomChipReg = {
-    new ICustomChipReg {
-      def name = "BLTCON1"
-      def value : Int = {
-        throw new UnsupportedOperationException("can not read from " + name)
-      }
-      def value_=(aValue: Int) {
-        srcBShift = (aValue >>> 24) & 0x0f
-        dOff  = (aValue & 0x80) == 0x80
-        exclusiveFill   = (aValue & 0x10) == 0x10
-        inclusiveFill   = (aValue & 0x08) == 0x08
-        fillCarryInput  = (aValue & 0x04) == 0x04
-        descending      = (aValue & 0x02) == 0x02
-        lineMode        = (aValue & 0x01) == 0x01
-        printBltcon1
-      }
+  val BLTCON1 = new CustomChipWriteRegister("BLTCON1") {
+    def value_=(aValue: Int) {
+      srcBShift = (aValue >>> 24) & 0x0f
+      dOff  = (aValue & 0x80) == 0x80
+      exclusiveFill   = (aValue & 0x10) == 0x10
+      inclusiveFill   = (aValue & 0x08) == 0x08
+      fillCarryInput  = (aValue & 0x04) == 0x04
+      descending      = (aValue & 0x02) == 0x02
+      lineMode        = (aValue & 0x01) == 0x01
+      printBltcon1
+    }
+    private def printBltcon1 {
+      printf("SRC B SHIFT=%d DOFF=%b EFE=%b IFE=%b FC=%b DESC=%b LINE=%b\n",
+             srcBShift, dOff, exclusiveFill, inclusiveFill, fillCarryInput,
+             descending, lineMode)
     }
   }
 
-  def bltsize : ICustomChipReg = {
-    new ICustomChipReg {
-      def name = "BLTSIZE"
-      def value : Int = {
-        throw new UnsupportedOperationException("can not read from " + name)
-      }
-      def value_=(aValue: Int) {
-        blitsize = aValue
-        val h = (blitsize >>> 6) & 0x3ff
-        val v = blitsize & 0x1f
-        printf("STARTING BLITTER, H: %d V: %d\n", h, v)
-      }
+  val BLTSIZE = new CustomChipWriteRegister("BLTSIZE") {
+    def value_=(aValue: Int) {
+      blitsize = aValue
+      val h = (blitsize >>> 6) & 0x3ff
+      val v = blitsize & 0x1f
+      printf("STARTING BLITTER, H: %d V: %d\n", h, v)
     }
   }
 }
