@@ -3,6 +3,7 @@ package org.dmpp.playfield
 import java.awt._
 import javax.swing._
 import java.awt.event._
+import java.awt.image.BufferedImage
 
 import org.dmpp.amiga._
 
@@ -78,6 +79,10 @@ extends JComponent {
                           videoStandard.LinesTotal * HiresFactor)
   def canvasWidth  = screen.width + 60
   def canvasHeight = screen.height + dmaViewHeight + 30
+
+  val backBuffer = new BufferedImage(canvasWidth, canvasHeight,
+                                     BufferedImage.TYPE_INT_RGB)
+
   this.setPreferredSize(new Dimension(canvasWidth, canvasHeight))
 
   val hblankStart = 0x0f * LoresPixelsPerCycle * HiresFactor
@@ -111,6 +116,11 @@ extends JComponent {
   }
 
   override def paintComponent(g: Graphics) {
+    paintElements(backBuffer.getGraphics)
+    g.drawImage(backBuffer, 0, 0, null)
+  }
+
+  private def paintElements(g: Graphics) {
     clear(g)
     drawScreen(g)
     drawHorizontalBlankArea(g)
@@ -171,7 +181,7 @@ extends JComponent {
       }
     }
     g.setColor(Color.DARK_GRAY)
-    g.drawLine(beamx, 0, beamx, canvasHeight)
+    g.fillRect(beamx, screen.y, 2, screen.height)
   }
   private def drawSeparator(g: Graphics, y: Int) {
     g.setColor(Color.WHITE)

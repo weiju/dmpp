@@ -132,6 +132,11 @@ class Video(val videoStandard: VideoStandard,
   def vpos      = videoBeam.vpos
   def hclocks   = videoBeam.hclocks
 
+  // color registers what we actually do here is to store a 24bit RGB
+  // value here
+  val color = new Array[Int](32)
+
+  // playfield registers
   var ddfstrt  = 0
   var ddfstop  = 0
   var diwstrt  = 0
@@ -169,5 +174,52 @@ class Video(val videoStandard: VideoStandard,
     println("VERTICAL BLANK !!!!");
     if (interruptController != null) interruptController.intreq.value = 1 << 5
     if (copper != null) copper.restartOnVerticalBlank
+  }
+
+  // registers
+  val DIWSTRT = new CustomChipWriteRegister("DIWSTRT") {
+    def value_=(aValue: Int) { diwstrt = aValue }
+  }
+  val DIWSTOP = new CustomChipWriteRegister("DIWSTOP") {
+    def value_=(aValue: Int) { diwstop = aValue }
+  }
+  val DDFSTRT = new CustomChipWriteRegister("DDFSTRT") {
+    def value_=(aValue: Int) { ddfstrt = aValue }
+  }
+  val DDFSTOP = new CustomChipWriteRegister("DDFSTOP") {
+    def value_=(aValue: Int) { ddfstop = aValue }
+  }
+  val BPLCON0 = new CustomChipWriteRegister("BPLCON0") {
+    def value_=(aValue: Int) { bplcon0 = aValue }
+  }
+  val BPLCON1 = new CustomChipWriteRegister("BPLCON1") {
+    def value_=(aValue: Int) { bplcon1 = aValue }
+  }
+  val BPLCON2 = new CustomChipWriteRegister("BPLCON2") {
+    def value_=(aValue: Int) { bplcon2 = aValue }
+  }
+  val BPLCON3 = new CustomChipWriteRegister("BPLCON3") {
+    def value_=(aValue: Int) { bplcon3 = aValue }
+  }
+  val BPL1MOD = new CustomChipWriteRegister("BPL1MOD") {
+    def value_=(aValue: Int) { bpl1mod = aValue }
+  }
+  val BPL2MOD = new CustomChipWriteRegister("BPL2MOD") {
+    def value_=(aValue: Int) { bpl2mod = aValue }
+  }
+  val VPOSR = new CustomChipReadRegister("VPOSR") {
+    def value = {
+      val result = (vpos >> 8) & 0x01
+      printf("VPOSR = %02x\n", result)
+      result
+    }
+  }
+  val VHPOSR = new CustomChipReadRegister("VHPOSR") {
+    def value = {
+      val result = ((vpos & 0xff) << 8) | hclocks
+      printf("VHPOSR = %02x (vpos = %d, hpos = %d)\n", result, vpos,
+             hclocks)
+      result
+    }
   }
 }

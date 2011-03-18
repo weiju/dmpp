@@ -34,6 +34,30 @@ trait ICustomChipReg {
   def value: Int
 }
 
+abstract class CustomChipWriteRegister(val name: String) extends ICustomChipReg {
+  def value: Int = {
+    throw new UnsupportedOperationException("%s is write-only".format(name))
+  }
+}
+abstract class CustomChipReadRegister(val name: String) extends ICustomChipReg {
+  def value_=(value: Int) {
+    throw new UnsupportedOperationException("%s is read".format(name))
+  }
+}
+abstract class CustomChipStrobeRegister(val name: String) extends ICustomChipReg {
+  def value: Int = {
+    throw new UnsupportedOperationException("%s illegal read from strobe".format(name))
+  }
+}
+class CustomChipBogusRegister(val name: String) extends ICustomChipReg {
+  def value_=(value: Int) {
+    throw new UnsupportedOperationException("%s write not supported".format(name))
+  }
+  def value: Int = {
+    throw new UnsupportedOperationException("%s read not supported".format(name))
+  }
+}
+
 // This class should not implement ICustomChipReg and it only does so to
 // act as a placeholder for now. Later, we have
 // - pseudo read
@@ -66,72 +90,6 @@ extends ICustomChipReg {
 }
 
 // **********************************************************************
-// **** VIDEO/PLAYFIELD REGISTERS
-// **** TODO: Integrated them directly into the Video class
-// **********************************************************************
-/* VPOSR: Most significant bit of vertical beam position */
-class VPosReader(video: Video) extends ICustomChipReg {
-  def name = "VPOSR"
-  def value_=(aValue: Int) { }
-  def value = {
-    val result = (video.vpos >> 8) & 0x01
-    printf("VPOSR = %02x\n", result)
-    result
-  }
-}
-/*
- VHPOSR: vertical beam position, least significant bit in hi-byte
- horizontal beam position in lo-byte
-*/
-class VHPosReader(video: Video) extends ICustomChipReg {
-  def name = "VHPOSR"
-  def value_=(aValue: Int) { println("writing to VHPOSR not allowed") }
-  def value = {
-    val result = ((video.vpos & 0xff) << 8) | video.hclocks
-    printf("VHPOSR = %02x (vpos = %d, hpos = %d)\n", result, video.vpos,
-           video.hclocks)
-    result
-  }
-}
-
-abstract class VideoWriteRegister(val name: String, video: Video)
-extends ICustomChipReg {
-  def value = {
-    throw new Exception("reading value from " + name +" not allowed")
-  }
-}
-class BplCon0(video: Video) extends VideoWriteRegister("BPLCON0", video) {
-  def value_=(aValue: Int) { video.bplcon0 = aValue }
-}
-class BplCon1(video: Video) extends VideoWriteRegister("BPLCON1", video) {
-  def value_=(aValue: Int) { video.bplcon1 = aValue }
-}
-class BplCon2(video: Video) extends VideoWriteRegister("BPLCON2", video) {
-  def value_=(aValue: Int) { video.bplcon2 = aValue }
-}
-class BplCon3(video: Video) extends VideoWriteRegister("BPLCON3", video) {
-  def value_=(aValue: Int) { video.bplcon3 = aValue }
-}
-class Bpl1Mod(video: Video) extends VideoWriteRegister("BPL1MOD", video) {
-  def value_=(aValue: Int) { video.bpl1mod = aValue }
-}
-class Bpl2Mod(video: Video) extends VideoWriteRegister("BPL2MOD", video) {
-  def value_=(aValue: Int) { video.bpl2mod = aValue }
-}
-class DiwStrt(video: Video) extends VideoWriteRegister("DIWSTRT", video) {
-  def value_=(aValue: Int) { video.diwstrt = aValue }
-}
-class DiwStop(video: Video) extends VideoWriteRegister("DIWSTOP", video) {
-  def value_=(aValue: Int) { video.diwstop = aValue }
-}
-class DdfStrt(video: Video) extends VideoWriteRegister("DDFSTRT", video) {
-  def value_=(aValue: Int) { video.ddfstrt = aValue }
-}
-class DdfStop(video: Video) extends VideoWriteRegister("DDFSTOP", video) {
-  def value_=(aValue: Int) { video.ddfstop = aValue }
-}
-
-// **********************************************************************
 // **** REGISTER ADDRESS SPACE
 // **********************************************************************
 trait CustomChipChangeListener {
@@ -159,7 +117,7 @@ extends AddressSpace {
   val registers = Array[ICustomChipReg](
     new CustomChipRegister("BLTDDAT"), 
     new CustomChipRegisterR("DMACONR",  dmaController.dmacon),
-    new VPosReader(video),              new VHPosReader(video),
+    video.VPOSR,                        video.VHPOSR,
     new CustomChipRegister("DSKDATR"),  new CustomChipRegister("JOY0DAT"),
     new CustomChipRegister("JOY1DAT"),  new CustomChipRegister("CLXDAT"),
     new CustomChipRegister("ADKCONR"),  new CustomChipRegister("POT0DAT"),
@@ -170,7 +128,7 @@ extends AddressSpace {
     new CustomChipRegister("DSKPTH"),   new CustomChipRegister("DSKPTL"),
     new CustomChipRegister("DSKLEN"),   new CustomChipRegister("DSKDAT"),
     new CustomChipRegister("REFPTR"),   new CustomChipRegister("VPOSW"),
-    new CustomChipRegister("VHPOSW"),   copper.copcon,
+    new CustomChipRegister("VHPOSW"),   copper.COPCON,
     new CustomChipRegister("SERDAT"),   new CustomChipRegister("SERPER"),
     new CustomChipRegister("POTGO"),    new CustomChipRegister("JOYTEST"),
     new CustomChipRegister("STREQU"),   new CustomChipRegister("STRVBL"),
@@ -194,10 +152,10 @@ extends AddressSpace {
     new CustomChipRegister("DSKSYNC"), 
     copper.cop1lch,                     copper.cop1lcl,
     copper.cop2lch,                     copper.cop2lcl,
-    copper.copjmp1,                     copper.copjmp2,
-    copper.copins,
-    new DiwStrt(video),                 new DiwStop(video),
-    new DdfStrt(video),                 new DdfStop(video),
+    copper.COPJMP1,                     copper.COPJMP2,
+    copper.COPINS,
+    video.DIWSTRT,                      video.DIWSTOP,
+    video.DDFSTRT,                      video.DDFSTOP,
     new CustomChipRegisterW("DMACON",   dmaController.dmacon),
     new CustomChipRegister("CLXCON"),
     new CustomChipRegisterW("INTENA",   interruptController.intena),
@@ -227,9 +185,9 @@ extends AddressSpace {
     new CustomChipRegister("BPL6PTH"),  new CustomChipRegister("BPL6PTL"),
     new CustomChipRegister("UNDEF14"),  new CustomChipRegister("UNDEF15"),
     new CustomChipRegister("UNDEF16"),  new CustomChipRegister("UNDEF17"),
-    new BplCon0(video),                 new BplCon1(video),
-    new BplCon2(video),                 new BplCon3(video),
-    new Bpl1Mod(video),                 new Bpl2Mod(video),
+    video.BPLCON0,                      video.BPLCON1,
+    video.BPLCON2,                      video.BPLCON3,
+    video.BPL1MOD,                      video.BPL2MOD,
     new CustomChipRegister("UNDEF18"),  new CustomChipRegister("UNDEF19"),
     new CustomChipRegister("BPL1DAT"),  new CustomChipRegister("BPL2DAT"),
     new CustomChipRegister("BPL3DAT"),  new CustomChipRegister("BPL4DAT"),

@@ -214,39 +214,25 @@ class Copper extends DmaChannel {
     }
   }
 
-  def copjmp2 : ICustomChipReg = {
-    new ICustomChipReg {
-      def name = "COPJMP2"
-      def value: Int = {
-        throw new UnsupportedOperationException("READING COPJMP2 NOT SUPPORTED")
-      }
-      def value_=(aValue: Int) { pc = cop2lc }
+  val COPJMP1 = new CustomChipStrobeRegister("COPJMP1") {
+    def value_=(aValue: Int) {
+      pc = cop1lc
+      printf("Strobed COPJMP1, pc is now: %04x\n", pc)
     }
   }
 
-  def copcon : ICustomChipReg = {
-    new ICustomChipReg {
-      def name = "COPCON"
-      def value: Int = {
-        throw new UnsupportedOperationException("READING COPCON NOT SUPPORTED")
-      }
-      // COPCON only has one supported bit: the DANGER bit.
-      // we simply map that to a boolean
-      def value_=(aValue: Int) { danger = (aValue & 0x02) == 0x02 }
-    }
+  val COPJMP2 = new CustomChipStrobeRegister("COPJMP2") {
+    def value_=(aValue: Int) { pc = cop2lc }
   }
 
+  val COPCON = new CustomChipWriteRegister("COPCON") {
+    /**
+     * COPCON only has one supported bit: the DANGER bit.
+     * we simply map that to a boolean
+     */
+    def value_=(aValue: Int) { danger = (aValue & 0x02) == 0x02 }
+  }
   // We do not implement COPINS. It is not clear if it is ever used. For now,
   // we will throw an exception on access
-  def copins : ICustomChipReg = {
-    new ICustomChipReg {
-      def name = "COPINS"
-      def value: Int = {
-        throw new UnsupportedOperationException("READING COPINS NOT SUPPORTED")
-      }
-      def value_=(aValue: Int) {
-        throw new UnsupportedOperationException("WRITING COPINS NOT SUPPORTED")
-      }
-    }
-  }
+  val COPINS = new CustomChipBogusRegister("COPINS")
 }
