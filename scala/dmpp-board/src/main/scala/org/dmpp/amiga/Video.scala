@@ -86,28 +86,6 @@ object PAL extends VideoStandard {
   val DisplayableLinesInterlace = 567
 }
 
-class VideoBeam(videoStandard: VideoStandard,
-                notifyVerticalBlank: () => Unit) {
-  var hpos           = 0
-  var vpos           = 0
-
-  // This funny expression ensures that even line return 227 and odd lines
-  // return 228 clocks
-  def hclocks = (hpos >>> 1) + (vpos & 0x000000001)
-
-  def advance(pixels: Int) {
-    hpos += pixels
-    if (hpos > videoStandard.CpuCyclesPerScanline) {
-      vpos += 1
-      hpos -= videoStandard.CpuCyclesPerScanline
-      if (vpos >= videoStandard.LinesTotal) {
-        vpos = 0
-        notifyVerticalBlank() // note: the () must be added to call the method
-      }
-    }
-  }
-}
-
 /*
  * Timing is absolutely crucial for a faithful Amiga emulation.
  * This is a class to capture the essence of Amiga timing:
@@ -124,24 +102,36 @@ class VideoBeam(videoStandard: VideoStandard,
  * from 0 to (455 - 1) (= 227.5 * 2) horizontally
  * and from 0 to (312 - 1) (PAL) or 262 (NTSC) vertically
  */
-class Video(val videoStandard: VideoStandard,
-            interruptController: InterruptController) {
-  class ColorRegister(n: Int) extends CustomChipWriteRegister("COLOR%02d".format(n)) {
-    def value_=(value: Int) {
-      color(n) = value
+class VideoBeam(videoStandard: VideoStandard,
+                notifyVerticalBlank: () => Unit) {
+  var hpos           = 0
+  var vpos           = 0
+
+  /**
+   * This funny expression ensures that even line return 227 and odd lines
+   * return 228 clocks.
+   * @return the current horizontal position in color clocks 
+   */
+  def hclocks = (hpos >>> 1) + (vpos & 0x000000001)
+
+  /**
+   * Advance the video beam by a certain number of Lores pixels.
+   * @param number of Lores pixels to advance
+   */
+  def advance(pixels: Int) {
+    hpos += pixels
+    if (hpos > videoStandard.CpuCyclesPerScanline) {
+      vpos += 1
+      hpos -= videoStandard.CpuCyclesPerScanline
+      if (vpos >= videoStandard.LinesTotal) {
+        vpos = 0
+        notifyVerticalBlank() // note: the () must be added to call the method
+      }
     }
   }
+}
 
-  val videoBeam = new VideoBeam(videoStandard, notifyVerticalBlank _)
-  def hpos      = videoBeam.hpos
-  def vpos      = videoBeam.vpos
-  def hclocks   = videoBeam.hclocks
-
-  val color = new Array[Int](32)
-  val COLOR = new Array[ColorRegister](32)
-  for (i <- 0 until 32) COLOR(i) = new ColorRegister(i)
-
-  // playfield registers
+class Playfield(video: Video) {
   var ddfstrt  = 0
   var ddfstop  = 0
   var diwstrt  = 0
@@ -149,7 +139,7 @@ class Video(val videoStandard: VideoStandard,
   var bplcon0  = 0
   var bplcon1  = 0
   var bplcon2  = 0
-  var bplcon3  = 0 // ECS register TODO
+  var bplcon3  = 0
   var bpl1mod  = 0
   var bpl2mod  = 0
 
@@ -169,48 +159,69 @@ class Video(val videoStandard: VideoStandard,
   def playfield2Priority     = (bplcon2 & 0x40) == 0x40
   def playfield2PriorityCode = (bplcon2 >> 3) & 0x07
   def playfield1PriorityCode = bplcon2 & 0x07
+}
 
+/**
+ * The Video object acts as a managing component for the Playfield system,
+ * the Sprite system and the VideoBeam.
+ * @constructor creates a new Video object
+ * @param videoStandard either PAL or NTSC
+ * @param interruptController a reference to the interrupt controller
+ */
+class Video(val videoStandard: VideoStandard,
+            interruptController: InterruptController) {
+
+  /**
+   * Color register.
+   * @constructor creates a color register
+   * @param n color register number
+   */
+  class ColorRegister(n: Int) extends CustomChipWriteRegister("COLOR%02d".format(n)) {
+    def value_=(value: Int) {
+      color(n) = value
+    }
+  }
+
+  val videoBeam = new VideoBeam(videoStandard, notifyVerticalBlank _)
+  val playfield = new Playfield(this)
   var copper: Copper = null
 
-  def doCycles(numCycles: Int) = {
-    videoBeam.advance(numCycles)
-  }
-  private def notifyVerticalBlank {
-    println("VERTICAL BLANK !!!!");
-    if (interruptController != null) interruptController.INTREQ.value = 1 << 5
-    if (copper != null) copper.restartOnVerticalBlank
-  }
+  // Color registers are shared between sprites and playfields, so they are
+  // placed in the Video object
+  val color = new Array[Int](32)
 
-  // registers
+  // **********************************************************************
+  // ***** Registers
+  // **********************************************************************
   val DIWSTRT = new CustomChipWriteRegister("DIWSTRT") {
-    def value_=(aValue: Int) { diwstrt = aValue }
+    def value_=(aValue: Int) { playfield.diwstrt = aValue }
   }
   val DIWSTOP = new CustomChipWriteRegister("DIWSTOP") {
-    def value_=(aValue: Int) { diwstop = aValue }
+    def value_=(aValue: Int) { playfield.diwstop = aValue }
   }
   val DDFSTRT = new CustomChipWriteRegister("DDFSTRT") {
-    def value_=(aValue: Int) { ddfstrt = aValue }
+    def value_=(aValue: Int) { playfield.ddfstrt = aValue }
   }
   val DDFSTOP = new CustomChipWriteRegister("DDFSTOP") {
-    def value_=(aValue: Int) { ddfstop = aValue }
+    def value_=(aValue: Int) { playfield.ddfstop = aValue }
   }
   val BPLCON0 = new CustomChipWriteRegister("BPLCON0") {
-    def value_=(aValue: Int) { bplcon0 = aValue }
+    def value_=(aValue: Int) { playfield.bplcon0 = aValue }
   }
   val BPLCON1 = new CustomChipWriteRegister("BPLCON1") {
-    def value_=(aValue: Int) { bplcon1 = aValue }
+    def value_=(aValue: Int) { playfield.bplcon1 = aValue }
   }
   val BPLCON2 = new CustomChipWriteRegister("BPLCON2") {
-    def value_=(aValue: Int) { bplcon2 = aValue }
+    def value_=(aValue: Int) { playfield.bplcon2 = aValue }
   }
   val BPLCON3 = new CustomChipWriteRegister("BPLCON3") {
-    def value_=(aValue: Int) { bplcon3 = aValue }
+    def value_=(aValue: Int) { playfield.bplcon3 = aValue }
   }
   val BPL1MOD = new CustomChipWriteRegister("BPL1MOD") {
-    def value_=(aValue: Int) { bpl1mod = aValue }
+    def value_=(aValue: Int) { playfield.bpl1mod = aValue }
   }
   val BPL2MOD = new CustomChipWriteRegister("BPL2MOD") {
-    def value_=(aValue: Int) { bpl2mod = aValue }
+    def value_=(aValue: Int) { playfield.bpl2mod = aValue }
   }
   val VPOSR = new CustomChipReadRegister("VPOSR") {
     def value = {
@@ -226,5 +237,28 @@ class Video(val videoStandard: VideoStandard,
              hclocks)
       result
     }
+  }
+  val COLOR = new Array[ColorRegister](32)
+  for (i <- 0 until 32) COLOR(i) = new ColorRegister(i)
+
+  // **********************************************************************
+  // ***** Methods
+  // **********************************************************************
+  def hpos      = videoBeam.hpos
+  def vpos      = videoBeam.vpos
+  def hclocks   = videoBeam.hclocks
+
+  /**
+   * Advance the video beam by a specified amount of cycles.
+   * @param numCycles the number of cycles to advance
+   */
+  def doCycles(numCycles: Int) {
+    videoBeam.advance(numCycles)
+  }
+
+  private def notifyVerticalBlank {
+    println("VERTICAL BLANK !!!!");
+    if (interruptController != null) interruptController.INTREQ.value = 1 << 5
+    if (copper != null) copper.restartOnVerticalBlank
   }
 }

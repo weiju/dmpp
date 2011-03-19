@@ -34,10 +34,10 @@ object Main {
 
   def createVideo = {
     val video = new Video(NTSC, null)
-    video.diwstrt = DIWSTRT_Standard
-    video.diwstop = DIWSTOP_Standard
-    video.ddfstrt = DDFSTRT_StandardLores
-    video.ddfstop = DDFSTOP_StandardLores
+    video.DIWSTRT.value = DIWSTRT_Standard
+    video.DIWSTOP.value = DIWSTOP_Standard
+    video.DDFSTRT.value = DDFSTRT_StandardLores
+    video.DDFSTOP.value = DDFSTOP_StandardLores
     video
   }
 
@@ -57,22 +57,22 @@ object Main {
     frame.getContentPane.add(inputPanel1Flow, BorderLayout.NORTH)
     frame.getContentPane.add(inputPanel2, BorderLayout.SOUTH)
 
-    diwStrtField.setText("%04x".format(video.diwstrt))
+    diwStrtField.setText("%04x".format(video.playfield.diwstrt))
     inputPanel1.add(new JLabel("DIWSTRT: "))
     inputPanel1.add(diwStrtField)
 
-    diwStopField.setText("%04x".format(video.diwstop))
+    diwStopField.setText("%04x".format(video.playfield.diwstop))
     inputPanel1.add(new JLabel("DIWSTOP: "))
     inputPanel1.add(diwStopField)
 
     val updateButton = new JButton("Update")
     inputPanel1.add(updateButton)
 
-    ddfStrtField.setText("%02x".format(video.ddfstrt))
+    ddfStrtField.setText("%02x".format(video.playfield.ddfstrt))
     inputPanel1.add(new JLabel("DDFSTRT: "))
     inputPanel1.add(ddfStrtField)
 
-    ddfStopField.setText("%02x".format(video.ddfstop))
+    ddfStopField.setText("%02x".format(video.playfield.ddfstop))
     inputPanel1.add(new JLabel("DDFSTOP: "))
     inputPanel1.add(ddfStopField)
 
@@ -93,10 +93,10 @@ object Main {
 
     updateButton.addActionListener(new ActionListener {
       def actionPerformed(evt: ActionEvent) {
-        video.diwstrt = parseField(diwStrtField, "DIWSTRT")
-        video.diwstop = parseField(diwStopField, "DIWSTOP")
-        video.ddfstrt = parseField(ddfStrtField, "DDFSTRT")
-        video.ddfstop = parseField(ddfStopField, "DDFSTOP")
+        video.DIWSTRT.value = parseField(diwStrtField, "DIWSTRT")
+        video.DIWSTOP.value = parseField(diwStopField, "DIWSTOP")
+        video.DDFSTRT.value = parseField(ddfStrtField, "DDFSTRT")
+        video.DDFSTOP.value = parseField(ddfStopField, "DDFSTOP")
         canvas.updateDisplay
       }
     })

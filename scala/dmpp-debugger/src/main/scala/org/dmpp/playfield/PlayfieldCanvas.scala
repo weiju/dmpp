@@ -61,16 +61,18 @@ extends JComponent {
 
   def videoStandard = video.videoStandard
   def beam = video.videoBeam
-  def playfieldLeft = video.diwstrt & 0xff
-  def playfieldTop  = (video.diwstrt >>> 8) & 0xff 
-  def playfieldRight = (video.diwstop & 0xff) | 0x100
+  def playfield = video.playfield
+
+  def playfieldLeft = playfield.diwstrt & 0xff
+  def playfieldTop  = (playfield.diwstrt >>> 8) & 0xff 
+  def playfieldRight = (playfield.diwstop & 0xff) | 0x100
   // TODO: positions > 0xff
-  def playfieldBottom = ((video.diwstop >>> 8) & 0xff)
+  def playfieldBottom = ((playfield.diwstop >>> 8) & 0xff)
   def playfieldWidth  = playfieldRight - playfieldLeft
   def playfieldHeight = playfieldBottom - playfieldTop
 
-  def ddfLeft = video.ddfstrt & 0xff
-  def ddfRight = video.ddfstop & 0xff
+  def ddfLeft = playfield.ddfstrt & 0xff
+  def ddfRight = playfield.ddfstop & 0xff
   def ddfWidth = (ddfRight - ddfLeft)
 
   val dmaViewHeight = 80

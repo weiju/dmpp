@@ -86,7 +86,9 @@ trait CustomChipChangeListener {
  */
 class CustomAddressSpace(interruptController: InterruptController,
                          dmaController: DmaController,
-                         video: Video, copper: Copper, blitter: Blitter)
+                         video: Video,
+                         copper: Copper,
+                         blitter: Blitter)
 extends AddressSpace {
   val REGISTER_START = 0xdff000
   val NUM_REGISTERS  = 256 // this is actually the number of ECS registers
