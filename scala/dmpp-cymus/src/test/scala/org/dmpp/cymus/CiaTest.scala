@@ -25,26 +25,23 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.dmpp.cymus;
-import org.specs._
-import org.specs.matcher._
-import org.specs.runner.{ConsoleRunner, JUnit4}
+package org.dmpp.cymus
 
-class CiaTest extends JUnit4(CiaSpec)
-object CiaSpecRunner extends ConsoleRunner(CiaSpec)
+import org.scalatest.FlatSpec
+import org.scalatest.matchers.ShouldMatchers
+import org.junit.runner.RunWith
+import org.scalatest.junit.JUnitRunner
 
-object CiaSpec extends Specification with xUnit {
-  "CIA 8520" should {
-    // Tests setting the registers of the general purpose ports.
-    "set a port register" in {
-      val cia = new Cia8520("CIA Test");
-      cia.portAPins = 0x06 // %00000110
-      cia.setRegister(AbstractCia.DDRA, 3) // %00000011
-      cia.setRegister(AbstractCia.PRA,  1) // %00000001
+@RunWith(classOf[JUnitRunner])
+class CiaSpec extends FlatSpec with ShouldMatchers {
+  "CIA 8520" should "set a port register" in {
+    val cia = new Cia8520("CIA Test");
+    cia.portAPins = 0x06                 // %00000110
+    cia.setRegister(AbstractCia.DDRA, 3) // %00000011
+    cia.setRegister(AbstractCia.PRA,  1) // %00000001
       
-      assertEquals(5, cia.getRegister(AbstractCia.PRA))
-      assertEquals(0x05, cia.portAPins)
-      assertEquals(3, cia.getRegister(AbstractCia.DDRA))
-    }
+    cia.getRegister(AbstractCia.PRA)  should be (5)
+    cia.portAPins                     should be (5)
+    cia.getRegister(AbstractCia.DDRA) should be (3)
   }
 }

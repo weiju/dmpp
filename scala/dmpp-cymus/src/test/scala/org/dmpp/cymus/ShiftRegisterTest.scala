@@ -27,53 +27,45 @@
  */
 package org.dmpp.cymus;
 
-import org.specs._
-import org.specs.matcher._
-import org.specs.runner.{ConsoleRunner, JUnit4}
+import org.scalatest.FlatSpec
+import org.scalatest.matchers.ShouldMatchers
+import org.junit.runner.RunWith
+import org.scalatest.junit.JUnitRunner
 
-class ShiftRegisterTest extends JUnit4(ShiftRegisterSpec)
-object ShiftRegisterSpecRunner extends ConsoleRunner(ShiftRegisterSpec)
+@RunWith(classOf[JUnitRunner])
+class ShiftRegisterSpec extends FlatSpec with ShouldMatchers {
 
-object ShiftRegisterSpec extends Specification with xUnit {
+  "ShiftRegister" should "be initialized" in {
+    val reg = new ShiftRegister(4)
+    reg.empty should be (true)
+  }
+  it should "enqueue and dequeue" in {
+    val reg = new ShiftRegister(4)
+    reg.enqueue(false)
+    reg.enqueue(true)
 
-  "ShiftRegister" should {
-    "be initialized" in {
-      val reg = new ShiftRegister(4)
-      assertTrue(reg.empty)
-    }
-    "enqueue and dequeue" in {
-      val reg = new ShiftRegister(4)
-      reg.enqueue(false)
-      reg.enqueue(true)
-      assertFalse(reg.empty)
-      assertFalse(reg.dequeue)
-      assertTrue(reg.dequeue)
-      assertTrue(reg.empty)
-    }
-    "report a full queue" in {
-      val reg = new ShiftRegister(2)
-      reg.enqueue(false)
-      reg.enqueue(true)
-      try {
-        reg.enqueue(true)
-        fail("register should throw IndexOutOfBoundsException");
-      } catch {
-        case ex:IndexOutOfBoundsException =>
-          assertEquals("buffer is full", ex.getMessage)
-      }
-    }
-    "wrap around slots" in {
-      println("WRAPPED")
-      val reg = new ShiftRegister(2)
-      // use the first slot normal
-      reg.enqueue(true)
-      assertTrue(reg.dequeue)
+    reg.empty   should be (false)
+    reg.dequeue should be (false)
+    reg.dequeue should be (true)
+    reg.empty   should be (true)
+  }
+  it should "report a full queue" in {
+    val reg = new ShiftRegister(2)
+    reg.enqueue(false)
+    reg.enqueue(true)
 
-      // the second two slots should be wrapped
-      reg.enqueue(false)
-      reg.enqueue(true)
-      assertFalse(reg.dequeue)
-      assertTrue(reg.dequeue)
-    }
+    evaluating { reg.enqueue(true) } should produce [IndexOutOfBoundsException]
+  }
+  it should "wrap around slots" in {
+    val reg = new ShiftRegister(2)
+    // use the first slot normal
+    reg.enqueue(true)
+    reg.dequeue should be (true)
+
+    // the second two slots should be wrapped
+    reg.enqueue(false)
+    reg.enqueue(true)
+    reg.dequeue should be (false)
+    reg.dequeue should be (true)
   }
 }
