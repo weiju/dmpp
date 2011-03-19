@@ -1,4 +1,4 @@
-package org.dmpp.playfield
+package org.dmpp.debugger
 
 import java.awt._
 import javax.swing._

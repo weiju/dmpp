@@ -1,4 +1,4 @@
-package org.dmpp.playfield
+package org.dmpp.debugger
 
 import javax.swing._
 import java.awt._
@@ -41,12 +41,21 @@ object Main {
     video
   }
 
-  def main(args: Array[String]) {
-    val frame = new JFrame("Amiga Screen and DMA Simulation")
-    frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE)
-    val video = createVideo
+  def createMemoryPanel = {
+    val mainPanel = new JPanel(new BorderLayout)
+    val ciaPanel = new JPanel(new FlowLayout(FlowLayout.LEFT))
+    mainPanel.add(ciaPanel, BorderLayout.NORTH)
+    val ciaAPanel = new CiaAPanel(0)
+    val ciaBPanel = new CiaBPanel(0)
+    ciaPanel.add(ciaAPanel)
+    ciaPanel.add(ciaBPanel)
+    mainPanel
+  }
+
+  def createVideoPanel(video: Video) = {
+    val mainPanel = new JPanel(new BorderLayout)
     val canvas = new PlayfieldCanvas(video)
-    frame.getContentPane.add(canvas, BorderLayout.CENTER)
+    mainPanel.add(canvas, BorderLayout.CENTER)
 
     val inputPanel1Flow = new JPanel(new FlowLayout(FlowLayout.LEFT))
     inputPanel1Flow.setBorder(new TitledBorder("Window Sizes"))
@@ -54,8 +63,8 @@ object Main {
     val inputPanel2 = new JPanel(new FlowLayout(FlowLayout.LEFT))
     //inputPanel2.setBorder(new TitledBorder("Beam Control"))
     inputPanel1Flow.add(inputPanel1)
-    frame.getContentPane.add(inputPanel1Flow, BorderLayout.NORTH)
-    frame.getContentPane.add(inputPanel2, BorderLayout.SOUTH)
+    mainPanel.add(inputPanel1Flow, BorderLayout.NORTH)
+    mainPanel.add(inputPanel2, BorderLayout.SOUTH)
 
     diwStrtField.setText("%04x".format(video.playfield.diwstrt))
     inputPanel1.add(new JLabel("DIWSTRT: "))
@@ -138,6 +147,18 @@ object Main {
         sliderLabel.setText("%d".format(slider.getValue))
       }
     })
+    mainPanel
+  }
+
+  def main(args: Array[String]) {
+    val video = createVideo
+
+    val frame = new JFrame("Amiga Screen and DMA Simulation")
+    frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE)
+    val tabbedPane = new JTabbedPane
+    frame.getContentPane.add(tabbedPane, BorderLayout.CENTER)
+    tabbedPane.add(createVideoPanel(video), "Video")
+    tabbedPane.add(createMemoryPanel, "Memory")
 
     frame.pack
     frame.setVisible(true)
