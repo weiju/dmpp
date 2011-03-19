@@ -46,6 +46,7 @@ package org.dmpp.amiga
 //   range on NTSC is 20 to 261 (241 lines)
 //   => overshoot of 1 scan line
 trait VideoStandard {
+
   // 455 clock cycles per scanline, both on PAL and NTSC
   // DMA clock cycles are half of that and only reach until 228 ($E4),
   // but it's only a matter of a right shift to convert it
@@ -86,7 +87,7 @@ object PAL extends VideoStandard {
   val DisplayableLinesInterlace = 567
 }
 
-/*
+/**
  * Timing is absolutely crucial for a faithful Amiga emulation.
  * This is a class to capture the essence of Amiga timing:
  * Everything is tied to video beam. One color clock corresponds
@@ -101,6 +102,10 @@ object PAL extends VideoStandard {
  * Note: hpos and vpos measure the range of the PAL/NTSC range which is
  * from 0 to (455 - 1) (= 227.5 * 2) horizontally
  * and from 0 to (312 - 1) (PAL) or 262 (NTSC) vertically
+ * @constructor creates a VideoBeam object
+ * @param videoStandard PAL or NTSC
+ * @param notifyVerticalBlank a method to be called on the start of vertical
+ *        blanking
  */
 class VideoBeam(videoStandard: VideoStandard,
                 notifyVerticalBlank: () => Unit) {
@@ -131,39 +136,9 @@ class VideoBeam(videoStandard: VideoStandard,
   }
 }
 
-class Playfield(video: Video) {
-  var ddfstrt  = 0
-  var ddfstop  = 0
-  var diwstrt  = 0
-  var diwstop  = 0
-  var bplcon0  = 0
-  var bplcon1  = 0
-  var bplcon2  = 0
-  var bplcon3  = 0
-  var bpl1mod  = 0
-  var bpl2mod  = 0
-
-  // BPLCON0 derived values
-  def hiresMode              = (bplcon0 & 0x8000) == 0x8000
-  def holdAndModifyMode      = (bplcon0 & 0x800)  == 0x800
-  def dualPlayfieldMode      = (bplcon0 & 0x400)  == 0x400
-  def compositeColorEnable   = (bplcon0 & 0x200)  == 0x200
-  def interlaceMode          = (bplcon0 & 0x04)   == 0x04
-  def bitplaneUseCode        = (bplcon0 >> 12) & 0x07
-
-  // BPLCON1 derived values
-  def playfield2HScrollCode  = (bplcon1 >> 4) & 0x0f
-  def playfield1HScrollCode  = bplcon1 & 0x0f
-
-  // BPLCON2 derived values
-  def playfield2Priority     = (bplcon2 & 0x40) == 0x40
-  def playfield2PriorityCode = (bplcon2 >> 3) & 0x07
-  def playfield1PriorityCode = bplcon2 & 0x07
-}
-
 /**
- * The Video object acts as a managing component for the Playfield system,
- * the Sprite system and the VideoBeam.
+ * The Video object acts as a an interface component for the PlayfieldSystem,
+ * the SpriteSystem and the VideoBeam.
  * @constructor creates a new Video object
  * @param videoStandard either PAL or NTSC
  * @param interruptController a reference to the interrupt controller
@@ -183,7 +158,7 @@ class Video(val videoStandard: VideoStandard,
   }
 
   val videoBeam = new VideoBeam(videoStandard, notifyVerticalBlank _)
-  val playfield = new Playfield(this)
+  val playfield = new PlayfieldSystem(this)
   var copper: Copper = null
 
   // Color registers are shared between sprites and playfields, so they are
@@ -256,6 +231,10 @@ class Video(val videoStandard: VideoStandard,
     videoBeam.advance(numCycles)
   }
 
+  /**
+   * This method is called by the video beam on each start of the vertical
+   * blanking phase.
+   */
   private def notifyVerticalBlank {
     println("VERTICAL BLANK !!!!");
     if (interruptController != null) interruptController.INTREQ.value = 1 << 5
