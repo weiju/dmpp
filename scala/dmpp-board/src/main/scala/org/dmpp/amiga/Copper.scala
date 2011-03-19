@@ -84,13 +84,6 @@ class Copper extends DmaChannel {
     // merge the beam position into one word for fast comparison
     val currentPos =
       (((_video.vpos & 0xff) << 8) | (_video.hclocks & 0xff)) & compareMask
-    printf("positionReached(), comparing currentPos = %d with comparePos: %d\n",
-           currentPos, comparePos)
-    if (currentPos >= comparePos) {
-      printf("Copper: comparison ok, current: %04x comp: %04x, vpos: %02x " +
-             "hpos: %02x\n",
-              currentPos, comparePos, _video.vpos, _video.hclocks)
-    }
     currentPos >= comparePos
   }
 
@@ -98,7 +91,6 @@ class Copper extends DmaChannel {
     if (!enabled) return 0
     if (waiting && !positionReached) NumWaitingCycles
     else if (waiting && positionReached) {
-      println("Copper: VIDEO BEAM POSITION REACHED, WAKING UP !!!")
       waiting = false
       NumWakeupCycles
     } else {
@@ -119,7 +111,13 @@ class Copper extends DmaChannel {
   }
 
   private def skipOrWait: Int = {
-    compareMask = (ir2 & 0xffff) | 0x8001 
+    // creating the compare mask works as following:
+    // IR2 can only use bits 1-14 for masking, since Bit 0 is used to
+    // differentiate between WAIT and skip and Bit 15 is the Blitter Finish Disable
+    // Flag (BFD). The Copper can only see even positions anyways, but we set
+    // Bit 15 in the comparison mask so it will not be on vertical positions
+    // larger than 0x80
+    compareMask = (ir2 & 0xffff) | 0x8000
     comparePos = ir1 & compareMask
     blitterFinishedDisable = (ir2 & 0x8000) == 0x8000
     val position = CopperPosition(hp = ir1 & 0xfe,

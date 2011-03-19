@@ -1,6 +1,7 @@
 package org.dmpp.amiga
 
 import org.scalatest.FlatSpec
+import org.scalatest.BeforeAndAfterEach
 import org.scalatest.matchers.ShouldMatchers
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
@@ -23,6 +24,9 @@ class CopperListMemory extends AddressSpace {
   private var copperLists: List[CopperList] = Nil
   var writeLog : List[String] = Nil
 
+  def reset {
+    writeLog = Nil
+  }
   def start = 0
   def size  = 10000000
   def readByte(address: Int)  = 0
@@ -55,7 +59,7 @@ class MockVideo extends Video(NTSC, null) {
  * A test for Copper functionality.
  */
 @RunWith(classOf[JUnitRunner])
-class CopperSpec extends FlatSpec with ShouldMatchers {
+class CopperSpec extends FlatSpec with ShouldMatchers with BeforeAndAfterEach {
 
   val NoCyclesUsed = 0
 
@@ -64,6 +68,10 @@ class CopperSpec extends FlatSpec with ShouldMatchers {
   val copper: Copper = new Copper
   copper.addressSpace = mockMemory
   copper.video = mockVideo
+
+  override def beforeEach {
+    mockMemory.reset
+  }
 
   "Copper" should "have a valid initial state" in {
     copper.addressSpace should not be (null)
