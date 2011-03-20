@@ -27,6 +27,21 @@
  */
 package org.dmpp.amiga
 
+object PlayfieldConstants {
+  val DIWSTRT_Standard      = 0x2c81 // 0xvvhh
+  val DIWSTOP_Standard      = 0xf4c1 // 0xvvhh
+
+  val DDFSTRT_StandardLores = 0x38
+  val DDFSTRT_StandardHires = 0x3c
+  val DDFSTRT_LimitLores    = 0x18
+  val DDFSTRT_LimitHires    = 0x18
+
+  val DDFSTOP_StandardLores = 0xd0
+  val DDFSTOP_StandardHires = 0xd4
+  val DDFSTOP_LimitLores    = 0xd8
+  val DDFSTOP_LimitHires    = 0xd8
+}
+
 /**
  * An implementation of the Amiga Playfield hardware.
  * @constructor create an instance of a Playfield component
