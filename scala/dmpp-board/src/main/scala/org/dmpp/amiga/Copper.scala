@@ -45,18 +45,17 @@ class Copper extends DmaChannel {
 
   case class CopperPosition(hp: Int, vp: Int, he: Int, ve: Int)
 
-  private var cop1lc        = 0
-  private var cop2lc        = 0
-  private var ir1           = 0
-  private var ir2           = 0
+  var cop1lc        = 0
+  var cop2lc        = 0
+  var ir1           = 0
+  var ir2           = 0
   private var _video: Video = null
 
   // wait status
-  private var blitterFinishedDisable = false
-  private var comparePos = 0
-  private var compareMask = 0
+  private def blitterFinishedDisable = (ir2 & 0x8000) == 0x8000
+  private def compareMask = (ir2 & 0xffff) | 0x8000
+  private def comparePos = ir1 & compareMask
 
-  // public accessible state
   var addressSpace : AddressSpace = null
   var waiting : Boolean           = false
   var danger  : Boolean           = false
@@ -117,9 +116,6 @@ class Copper extends DmaChannel {
     // Flag (BFD). The Copper can only see even positions anyways, but we set
     // Bit 15 in the comparison mask so it will not be on vertical positions
     // larger than 0x80
-    compareMask = (ir2 & 0xffff) | 0x8000
-    comparePos = ir1 & compareMask
-    blitterFinishedDisable = (ir2 & 0x8000) == 0x8000
     val position = CopperPosition(hp = ir1 & 0xfe,
                                   vp = (ir1 >>> 8) & 0xff,
                                   he = ir2 & 0xfe,

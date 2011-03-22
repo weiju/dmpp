@@ -146,8 +146,11 @@ object Main {
     frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE)
     val tabbedPane = new JTabbedPane
     frame.getContentPane.add(tabbedPane, BorderLayout.CENTER)
+    val copperView = new CopperView(amiga.copper)
+    frame.getContentPane.add(copperView, BorderLayout.WEST)
+
     tabbedPane.add(createVideoPanel(amiga.video), "Video")
-    tabbedPane.add(createMemoryPanel(amiga), "Memory")
+    tabbedPane.add(createCustomChipPanel(amiga), "Custom Chips")
 
     frame.pack
     frame.setVisible(true)
@@ -174,10 +177,10 @@ object Main {
     mainPanel
   }
 
-  def createMemoryPanel(amiga: Amiga) = {
+  def createCustomChipPanel(amiga: Amiga) = {
     val mainPanel = new JPanel(new BorderLayout)
     val ciaPanel = new JPanel(new FlowLayout(FlowLayout.LEFT))
-    mainPanel.add(ciaPanel, BorderLayout.NORTH)
+    mainPanel.add(ciaPanel, BorderLayout.SOUTH)
     val ciaAPanel = new CiaAPanel(amiga.ciaA, 0xbfe001)
     val ciaBPanel = new CiaBPanel(amiga.ciaB, 0xbfd000)
     ciaPanel.add(ciaAPanel)

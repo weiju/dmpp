@@ -22,8 +22,10 @@ extends JPanel(new BorderLayout) with CustomChipChangeListener {
   var index = 0
   for (reg <- amiga.customChipRegisters) {
     val label = createRegisterControl(reg.name)
-    labelPanel.add(label)
     registerLabels(index) = label
+    // Save screen estate by not showing undefined/reserved registers
+    if (!reg.name.startsWith("UNDEF") &&
+        !reg.name.startsWith("RSRVD")) labelPanel.add(label)
     index += 1
   }
   setBorder(BorderFactory.createTitledBorder("Custom Chip Registers"))
