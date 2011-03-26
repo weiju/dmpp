@@ -28,6 +28,8 @@
 package org.dmpp.amiga
 import org.mahatma68k.AddressSpace
 
+class IllegalCopperAccessException extends Exception
+
 /**
  * The Copper class implements the Copper coprocessor of the Amiga system.
  * It is implemented as a DmaChannel to provide a more generic interface.
@@ -53,13 +55,13 @@ class Copper extends DmaChannel {
 
   // wait status
   private def blitterFinishedDisable = (ir2 & 0x8000) == 0x8000
-  private def compareMask = (ir2 & 0xffff) | 0x8000
-  private def comparePos = ir1 & compareMask
+  private def compareMask            = (ir2 & 0xffff) | 0x8000
+  private def comparePos             = ir1 & compareMask
 
   var addressSpace : AddressSpace = null
   var waiting : Boolean           = false
   var danger  : Boolean           = false
-  var pc            = 0
+  var pc                          = 0
 
   def video = _video
   def video_=(aVideo: Video) {
@@ -127,9 +129,18 @@ class Copper extends DmaChannel {
 
   private def move: Int = {
     val address = (ir1 & 0x1fe) + 0xdff000
-    printf("Copper: MOVE #$%02x, $%04x\n", ir2, address)
-    addressSpace.writeShort(address, ir2)
-    NumMoveCycles
+    if (!isValidMoveAddress(address)) throw new IllegalCopperAccessException
+    else {
+      printf("Copper: MOVE #$%02x, $%04x\n", ir2, address)
+      addressSpace.writeShort(address, ir2)
+      NumMoveCycles
+    }
+  }
+  private def isValidMoveAddress(address: Int) = {
+    // we only need to check the range from 0xdff000-0xdff07e, due to the interpretation
+    // of the move instruction the effective maximum is 0xdff1fe, which is valid
+    (danger && address >= 0xdff040 && address <= 0xdff07e) ||
+      address >= 0xdff080
   }
 
   private def skip(pos: CopperPosition): Int = {
@@ -153,7 +164,6 @@ class Copper extends DmaChannel {
   val COP1LCL = new CustomChipWriteRegister("COP1LCL") {
     def value_=(aValue: Int) {
       cop1lc = (cop1lc & 0xffff0000) | aValue
-      printf("COP1LC is now: %04x\n", cop1lc)
     }
   }
 
@@ -165,14 +175,12 @@ class Copper extends DmaChannel {
   val COP2LCL = new CustomChipWriteRegister("COP2LCL") {
     def value_=(aValue: Int) {
       cop2lc = (cop2lc & 0xffff0000) | aValue
-      printf("COP2LC is now: %04x\n", cop2lc)
     }
   }
 
   val COPJMP1 = new CustomChipStrobeRegister("COPJMP1") {
     def value_=(aValue: Int) {
       pc = cop1lc
-      printf("Strobed COPJMP1, pc is now: %04x\n", pc)
     }
   }
 

@@ -71,3 +71,7 @@ provide custom tools:
   algorithm (Android and iPhone)
 - ADF Tools/Arr!Jay, an ADF management library and an ADF manager application
 
+Known issues:
+
+- setting a register has an immediate effect, e.g. when a strobe register is written.
+  We might need to wait a couple of cycles in the future

@@ -101,22 +101,58 @@ class CopperSpec extends FlatSpec with ShouldMatchers with BeforeAndAfterEach {
     copper.waiting should be (false)
     copper.enabled should be (false)
   }
+  it should "jump to copper list 1 after COPJMP1 is written" in {
+    copper.COP1LCL.value = 0x0000
+    copper.COP1LCH.value = 0x0002
+    copper.COPJMP1.value = 0x1234 // write anything to the strobe
+
+    copper.pc should be (0x20000)
+    copper.waiting should be (false)
+    copper.enabled should be (false)
+  }
+  it should "jump to copper list 2 after COPJMP2 is written" in {
+    copper.COP2LCL.value = 0x0000
+    copper.COP2LCH.value = 0x0003
+    copper.COPJMP2.value = 0x1234 // write anything to the strobe
+
+    copper.pc should be (0x30000)
+    copper.waiting should be (false)
+    copper.enabled should be (false)
+  }
   it should "execute a move instruction" in {
     // first copper instruction in the HRM: a move of #$02 into
     // $dff0e0 (BPL1PTH)
-    val copperList = CopperList(0x20000, List(0x00e0, 0x0002))
-    addCopperListAndRestart(copperList)
-
+    addCopperListAndRestart(CopperList(0x20000, List(0x00e0, 0x0002)))
     copper.doDma               should be (Copper.NumMoveCycles)
     mockMemory.writeLog.length should be (1)
     mockMemory.writeLog(0)     should be ("#2.w -> $dff0e0")
   }
+  it should "fail when moving to a protected location" in {
+    // move #$02, $40
+    addCopperListAndRestart(CopperList(0x20000, List(0x0040, 0x0002)))
+    evaluating { copper.doDma } should produce [IllegalCopperAccessException]
+    // move #$02, $7e
+    addCopperListAndRestart(CopperList(0x20000, List(0x007e, 0x0002)))
+    evaluating { copper.doDma } should produce [IllegalCopperAccessException]
+  }
+  it should "not fail when moving to a protected location and danger bit is set" in {
+    copper.COPCON.value = 2 // set danger bit
+    // move #$02, $40
+    addCopperListAndRestart(CopperList(0x20000, List(0x0040, 0x0002)))
+    copper.doDma               should be (Copper.NumMoveCycles)
+    mockMemory.writeLog.length should be (1)
+    mockMemory.writeLog(0)     should be ("#2.w -> $dff040")
+  }
+  it should "not fail when moving to an illegal location even if danger bit is set" in {
+    copper.COPCON.value = 2 // set danger bit
+    // move #$02, $38
+    addCopperListAndRestart(CopperList(0x20000, List(0x0038, 0x0002)))
+    evaluating { copper.doDma } should produce [IllegalCopperAccessException]
+  }
 
   it should "execute a wait instruction" in {
     // another copper instruction in the HRM: wait for line 150
-    val copperList = CopperList(0x20000, List(0x9601, 0xff00))
-    addCopperListAndRestart(copperList)
-
+    addCopperListAndRestart(CopperList(0x20000, List(0x9601, 0xff00)))
     copper.doDma               should be (Copper.NumWaitCycles)
     mockMemory.writeLog.length should be (0)
     copper.waiting             should be (true)
