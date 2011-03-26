@@ -98,8 +98,6 @@ class CopperSpec extends FlatSpec with ShouldMatchers with BeforeAndAfterEach {
     copper.restartOnVerticalBlank
 
     copper.pc should be (0x20000)
-    copper.waiting should be (false)
-    copper.enabled should be (false)
   }
   it should "jump to copper list 1 after COPJMP1 is written" in {
     copper.COP1LCL.value = 0x0000
@@ -107,8 +105,6 @@ class CopperSpec extends FlatSpec with ShouldMatchers with BeforeAndAfterEach {
     copper.COPJMP1.value = 0x1234 // write anything to the strobe
 
     copper.pc should be (0x20000)
-    copper.waiting should be (false)
-    copper.enabled should be (false)
   }
   it should "jump to copper list 2 after COPJMP2 is written" in {
     copper.COP2LCL.value = 0x0000
@@ -116,8 +112,6 @@ class CopperSpec extends FlatSpec with ShouldMatchers with BeforeAndAfterEach {
     copper.COPJMP2.value = 0x1234 // write anything to the strobe
 
     copper.pc should be (0x30000)
-    copper.waiting should be (false)
-    copper.enabled should be (false)
   }
   it should "execute a move instruction" in {
     // first copper instruction in the HRM: a move of #$02 into
@@ -162,6 +156,25 @@ class CopperSpec extends FlatSpec with ShouldMatchers with BeforeAndAfterEach {
 
     mockVideo.videoBeam.vpos = 150
     copper.doDma               should be (Copper.NumWakeupCycles)
+  }
+
+  it should "execute a skip instruction unsuccessfully" in {
+    addCopperListAndRestart(CopperList(0x20000,
+                                       List(0x9601, 0xff01,   // skip v = 150
+                                            0x0038, 0x0002,
+                                            0x0042, 0x0004)))
+    copper.doDma               should be (Copper.NumSkipCycles)
+    copper.pc                  should equal (0x20004)
+  }
+
+  it should "execute a skip instruction successfully" in {
+    addCopperListAndRestart(CopperList(0x20000,
+                                       List(0x9601, 0xff01,   // skip v = 150
+                                            0x0038, 0x0002,
+                                            0x0042, 0x0004)))
+    mockVideo.videoBeam.vpos = 151
+    copper.doDma               should be (Copper.NumSkipCycles)
+    copper.pc                  should equal (0x20008)
   }
 
   // TODO: What if a wait instruction is executed when the position is already

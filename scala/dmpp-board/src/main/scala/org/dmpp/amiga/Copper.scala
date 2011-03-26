@@ -78,7 +78,6 @@ class Copper extends DmaChannel {
   def restartOnVerticalBlank {
     pc      = cop1lc
     waiting = false
-    enabled = false
   }
   
   private def positionReached: Boolean = {
