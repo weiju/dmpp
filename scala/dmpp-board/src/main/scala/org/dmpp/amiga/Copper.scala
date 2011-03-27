@@ -35,10 +35,10 @@ class IllegalCopperAccessException extends Exception
  * It is implemented as a DmaChannel to provide a more generic interface.
  */
 object Copper {
-  val NumMoveCycles    = 4
-  val NumSkipCycles    = 4
-  val NumWaitCycles    = 6
-  val NumWakeupCycles  = 1
+  val NumMoveCycles    = 4 // 2 odd memory cycles
+  val NumSkipCycles    = 4 // 2 odd memory cycles
+  val NumWaitCycles    = 6 // 3 odd memory cycles
+  val NumWakeupCycles  = 2 // 1 odd memory cycle 
   val NumWaitingCycles = 0
 }
 
