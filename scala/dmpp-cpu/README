@@ -1,0 +1,33 @@
+A special CPU emulation for DMPP, experimental.
+This is reusing some of the ideas from Mahatma68k and applying it
+in a 100% Scala CPU emulator and disassembler.
+
+Changes compared to Mahatma68k:
+
+- Disassembler and CPU emulation are separate
+- use Flyweight pattern to reduce memory footprint
+- provide more detailed timing information, namely make memory bus requests
+  explicit to realize wait cycles, provide address for each memory request
+- provide a test suite
+
+General requirements:
+
+- fast
+- small
+- complete 68000 feature set
+- cycle accurate
+- provide disassembly
+- provide timing information, even for conditional instructions
+  in this case, the state is inspected
+
+An Amiga CPU needs to specify
+
+- number of memory request cycles
+- address for each memory request cycle
+
+Execution should go
+
+- execute a whole instruction
+- push a memory cycle into the CPU
+
+
