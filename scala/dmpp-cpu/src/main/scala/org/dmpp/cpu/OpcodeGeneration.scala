@@ -235,7 +235,7 @@ case class InstrDef(mnemonic  : String,
       printf("VARPATTERN: %c\n", varpattern)
       indices =
         indices.flatMap(value => generateCombinationsFor(varpattern, eaModes,
-                                                             value))
+                                                         value))
     }
     println(indices)
   }

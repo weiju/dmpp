@@ -6,12 +6,12 @@
   <parent>
     <groupId>org.dmpp</groupId>
     <artifactId>dmpp</artifactId>
-    <version>1.0</version>
+    <version>1.0-SNAPSHOT</version>
   </parent>
 
   <!-- General information -->
   <name>Cymus</name>
-  <description>A CIA-8520/6526 emulation library in Java</description>
+  <description>A CIA-8520/6526 emulation library in Scala</description>
   <inceptionYear>2009</inceptionYear>
   <organization>
     <name>Box of Rats LLC</name>

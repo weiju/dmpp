@@ -27,32 +27,71 @@
  */
 package org.dmpp.cpu
 
-// this might be better a case class
+import scala.collection.mutable.HashMap
+
 case class ExecutionContext(regnum: Int = 0,
-                            eamode: EffectiveAddressMode = null,
-                            earegnum: Int = 0,
-                            size: Int = 0) {
+                            earegnum: Int = 0) {
 
   /**
    * Creates a new object based on this one, with the specified regnum field set.
    * @param regnum the register number
+   * @return new ExecutionContext with modified register number
    */
-  def cloneWithRegnum(regnum: Int) = {
-    ExecutionContext(regnum, eamode, earegnum, size)
+  def cloneWithRegnum(regnum: Int) = ExecutionContext(regnum, this.earegnum)
+
+  /**
+   * Creates a new object based on this one, with the specified earegnum field set.
+   * @param regnum the register number
+   * @return new ExecutionContext with modified register number
+   */
+  def cloneWithEaRegnum(earegnum: Int) = ExecutionContext(this.regnum, earegnum)
+}
+
+abstract class CpuStrategy(cpu: Cpu, size: Int, eamode: EffectiveAddressMode) {
+  def eaValueL(context: ExecutionContext) = {
+    eamode.lValue(context.earegnum)
   }
 }
 
-abstract class Instruction(cpu: Cpu) {
-  /**
-   * Register numbers in 68k instructions are typically specified at
-   * ----rrr---------
-   * @return the instruction's register number
-   */
-  def regnum = (cpu.currentInstructionWord >>> 9) & 0x07
-
+/**
+ * Instruction objects implement the Flyweight pattern to save memory.
+ * Intrinsic state is
+ *
+ * - Cpu reference
+ * - instruction size
+ * - effective address mode
+ *
+ * Extrinsic state is
+ * - register number
+ * - effective address register number
+ */
+abstract class Instruction(cpu: Cpu, size: Int,
+                           eamode: EffectiveAddressMode)
+extends CpuStrategy(cpu, size, eamode) {
   def execute(context: ExecutionContext): Unit
-  def eaValueL(context: ExecutionContext) = {
-    context.eamode.lValue(context.earegnum)
+}
+
+class InstructionFactory(cpu: Cpu) {
+  val addressModeMap = Map("an" -> cpu.AddressRegisterDirect,
+                           "dn" -> cpu.DataRegisterDirect)
+  val created = new HashMap[String, Instruction]
+
+  private def makeKey(mnemonic: String, size: Int, eamodeName: String) = {
+    "%s_%d_%s".format(mnemonic, size, eamodeName)
+  }
+
+  private def createInstruction(mnemonic: String, size: Int, eamodeName: String) = {
+    mnemonic match {
+      case "lea" =>
+        new LeaInstruction(cpu, size, addressModeMap(eamodeName))
+    }
+  }
+  def getInstruction(mnemonic: String, size: Int, eamodeName: String) = {
+    val key = makeKey(mnemonic, size, eamodeName)
+    if (!created.contains(key)) {
+      created(key) = createInstruction(mnemonic, size, eamodeName)
+    }
+    created(key)
   }
 }
 
@@ -60,21 +99,22 @@ case class Opcode(instruction: Instruction, context: ExecutionContext) {
   def execute = instruction.execute(context)
 }
 
-abstract class Disassembly(cpu: Cpu)
-extends Instruction(cpu) {
-  def execute(context: ExecutionContext) { }
+abstract class Disassembly(cpu: Cpu, size: Int, eamode: EffectiveAddressMode)
+extends CpuStrategy(cpu, size, eamode) {
+  def toString(context: ExecutionContext): String
 }
 
 
-class LeaInstruction(cpu: Cpu) extends Instruction(cpu) {
+class LeaInstruction(cpu: Cpu, size: Int, eamode: EffectiveAddressMode)
+extends Instruction(cpu, size, eamode) {
   def execute(context: ExecutionContext) {
-    cpu.a(regnum) = eaValueL(context)
+    cpu.a(context.regnum) = eaValueL(context)
   }
 }
 
-class LeaDisassembly(cpu: Cpu) extends Disassembly(cpu) {
+class LeaDisassembly(cpu: Cpu, size: Int, eamode: EffectiveAddressMode)
+extends Disassembly(cpu, size, eamode) {
   def toString(context: ExecutionContext) = {
-    "lea %s, a%02d".format(eaValueL(context).toString, regnum)
+    "lea %s, a%02d".format(eaValueL(context).toString, context.regnum)
   }
-
 }

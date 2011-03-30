@@ -4,7 +4,7 @@
 
   <groupId>org.dmpp</groupId>
   <artifactId>dmpp</artifactId>
-  <version>1.0</version>
+  <version>1.0-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>dmpp</name>
   <description>Amiga emulator written in Scala</description>
@@ -19,5 +19,6 @@
     <module>dmpp-cymus</module>
     <module>dmpp-board</module>
     <module>dmpp-debugger</module>
+    <module>dmpp-cpu</module>
   </modules>
 </project>

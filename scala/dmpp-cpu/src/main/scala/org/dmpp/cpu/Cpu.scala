@@ -56,9 +56,6 @@ class Cpu(addressSpace: AddressSpace) {
   var userMode = true
   val d        = Array(0, 0, 0, 0, 0, 0, 0, 0)
   val a        = Array(0, 0, 0, 0, 0, 0, 0, 0)
-  val Instructions = Map(
-    "lea" -> new LeaInstruction(this)
-  )
   val opcodes = new Array[Opcode](65535)
   def currentInstructionWord = addressSpace.uint16At(ip)
 
