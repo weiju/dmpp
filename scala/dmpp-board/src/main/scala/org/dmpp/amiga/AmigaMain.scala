@@ -50,7 +50,7 @@ object AmigaMain extends SwingApplication {
   val NUM_INSTRUCTIONS = 1288000 // End of vertical blank interrupt
   val NUM_INSTRUCTIONS = 2690000 // This is the target number !!!
 */
-  val FastSkip = 1 until (NumInstructions - 8)
+  val FastSkip = 5 until (NumInstructions - 8)
 
   def doOutput(i : Int) : Boolean = {
     if (FastSkip contains i) return false

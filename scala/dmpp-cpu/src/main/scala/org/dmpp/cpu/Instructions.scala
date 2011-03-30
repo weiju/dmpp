@@ -29,6 +29,13 @@ package org.dmpp.cpu
 
 import scala.collection.mutable.HashMap
 
+/**
+ * Extrinsic instruction state. This state is provided as the arguments
+ * encoded in an 68000 instruction.
+ * @constructor creates an ExecutionContext
+ * @param value encoded in register number field (can be address or data)
+ * @param value encoded in eff. address register number field
+ */
 case class ExecutionContext(regnum: Int = 0,
                             earegnum: Int = 0) {
 
@@ -47,6 +54,10 @@ case class ExecutionContext(regnum: Int = 0,
   def cloneWithEaRegnum(earegnum: Int) = ExecutionContext(this.regnum, earegnum)
 }
 
+/**
+ * Super class for operations based on a CPU.
+ * @param cpu
+ */
 abstract class CpuStrategy(cpu: Cpu, size: Int, eamode: EffectiveAddressMode) {
   def eaValueL(context: ExecutionContext) = {
     eamode.lValue(context.earegnum)
@@ -69,6 +80,10 @@ abstract class Instruction(cpu: Cpu, size: Int,
                            eamode: EffectiveAddressMode)
 extends CpuStrategy(cpu, size, eamode) {
   def execute(context: ExecutionContext): Unit
+}
+
+case class Opcode(instruction: Instruction, context: ExecutionContext) {
+  def execute = instruction.execute(context)
 }
 
 class InstructionFactory(cpu: Cpu) {
@@ -95,26 +110,9 @@ class InstructionFactory(cpu: Cpu) {
   }
 }
 
-case class Opcode(instruction: Instruction, context: ExecutionContext) {
-  def execute = instruction.execute(context)
-}
-
-abstract class Disassembly(cpu: Cpu, size: Int, eamode: EffectiveAddressMode)
-extends CpuStrategy(cpu, size, eamode) {
-  def toString(context: ExecutionContext): String
-}
-
-
 class LeaInstruction(cpu: Cpu, size: Int, eamode: EffectiveAddressMode)
 extends Instruction(cpu, size, eamode) {
   def execute(context: ExecutionContext) {
     cpu.a(context.regnum) = eaValueL(context)
-  }
-}
-
-class LeaDisassembly(cpu: Cpu, size: Int, eamode: EffectiveAddressMode)
-extends Disassembly(cpu, size, eamode) {
-  def toString(context: ExecutionContext) = {
-    "lea %s, a%02d".format(eaValueL(context).toString, context.regnum)
   }
 }

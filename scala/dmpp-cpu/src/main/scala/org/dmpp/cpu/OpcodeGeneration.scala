@@ -227,7 +227,7 @@ case class InstrDef(mnemonic  : String,
     result.reverse
   }
 
-  def setToOpcodeArray(opcodes: Array[Opcode]) {
+  def setToOpcodeArray(cpu: Cpu, opcodes: Array[Opcode]) {
     println("setToOpcodeArray()")
     printf("BASE VALUE: %02x\n", baseValue)
     var indices = List(baseValue)
@@ -261,4 +261,12 @@ object InstructionSet {
     InstrDef(mnemonic = "lea", pattern = "0100aaa111eeeeee", sizes = List("l"),
              eaModes  = List("ai","ad","ax","aw","al","pd","px"))
   )
+
+  def createOpcodes(cpu: Cpu) = {
+    val opcodes = new Array[Opcode](65535)
+    for (instrDef <- InstrDefs) {
+      instrDef.setToOpcodeArray(cpu, opcodes)
+    }
+    opcodes
+  }
 }

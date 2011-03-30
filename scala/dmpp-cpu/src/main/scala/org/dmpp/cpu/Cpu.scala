@@ -27,8 +27,37 @@
  */
 package org.dmpp.cpu
 
+import java.io._
+import java.nio._
+
 trait AddressSpace {
-  def uint16At(address: Int): Int
+  def start: Int
+  def size: Int
+  def readByte(address: Int): Int
+  def readShort(address: Int): Int
+  def readLong(address: Int): Int
+  def writeByte(address: Int, value: Int)
+  def writeShort(address: Int, value: Int)
+  def writeLong(address: Int, value: Int)
+}
+
+object KickstartROM {
+  val ROMStart         = 0xfc0000
+  val ROMSize          = 0x40000
+  val ModuloMask       = ROMSize - 1
+}
+
+class KickstartROM(bytes: ByteBuffer) extends AddressSpace {
+  import KickstartROM._
+  def start = ROMStart
+  def size  = ROMSize
+  def readByte(address: Int) = bytes.get(address - ROMStart).asInstanceOf[Int]
+  def readShort(address: Int) = bytes.getShort(address - ROMStart).asInstanceOf[Int]
+  def readLong(address: Int) = bytes.getInt(address - ROMStart)
+  def writeByte(address: Int, value: Int) { }
+  def writeShort(address: Int, value: Int) { }
+  def writeLong(address: Int, value: Int) { }
+  def execBase = readLong(ROMStart + 4)
 }
 
 /**
@@ -56,20 +85,7 @@ class Cpu(addressSpace: AddressSpace) {
   var userMode = true
   val d        = Array(0, 0, 0, 0, 0, 0, 0, 0)
   val a        = Array(0, 0, 0, 0, 0, 0, 0, 0)
-  val opcodes = new Array[Opcode](65535)
-  def currentInstructionWord = addressSpace.uint16At(ip)
-
-  init
-
-  def init {
-    initOpcodes
-  }
-
-  private def initOpcodes {
-    for (instrDef <- InstructionSet.InstrDefs) {
-      instrDef.setToOpcodeArray(opcodes)
-    }
-  }
+  def currentInstructionWord = addressSpace.readShort(ip)
 
   // Addressing modes are defined on the CPU object so they can be used
   // to efficiently retrieve values
@@ -84,9 +100,23 @@ class Cpu(addressSpace: AddressSpace) {
 }
 
 object Main {
-
   def main(args: Array[String]) {
     println("Mahatma 68k CPU Emulator")
-    val cpu = new Cpu(null)
+    if (args.length > 0) {
+      val file = new File(args(0))
+      val dataBytes = new Array[Byte](file.length.asInstanceOf[Int])
+      val is = new FileInputStream(file)
+      is.read(dataBytes)
+      is.close
+      val kickrom = new KickstartROM(ByteBuffer.wrap(dataBytes))
+      val execBase = kickrom.execBase
+      printf("Exec base: %04x\n", kickrom.execBase)
+      val cpu = new Cpu(kickrom)
+      cpu.ip = kickrom.execBase
+      printf("1st instruction word: %04x\n", cpu.currentInstructionWord)
+      val opcodes = InstructionSet.createOpcodes(cpu)
+    } else {
+      println("Please provide path to Kickstart ROM")
+    }
   }
 }
