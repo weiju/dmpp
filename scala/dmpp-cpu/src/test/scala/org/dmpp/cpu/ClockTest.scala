@@ -1,5 +1,5 @@
 /**
- * Created on March 30, 2011
+ * Created on March 31, 2011
  * Copyright (c) 2009-2011, Wei-ju Wu
  * All rights reserved.
  *
@@ -32,24 +32,35 @@ import org.scalatest.matchers.ShouldMatchers
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
-object MockChipBus extends Bus {
-  def requestMemory(device: BusDevice, address: Int, numCycles: Int) = false
+class MockClockedDevice extends ClockedDevice {
+  var tickCount = 0
+
+  def receiveTick(numTicks: Int) {
+    tickCount += numTicks
+  }
 }
 
 @RunWith(classOf[JUnitRunner])
-class CpuBusSpec extends FlatSpec with ShouldMatchers {
+class ClockSpec extends FlatSpec with ShouldMatchers {
 
-  val cpuBus = new CpuBus(MockChipBus)
+  "DefaultClock" should "send ticks to its connected devices" in {
+    val clockedDevice = new MockClockedDevice
+    val clock = new DefaultClock
+    clock.connectDevice(clockedDevice)
+    clock.performTicks(2, null)
+    
+    clockedDevice.tickCount should be (2)
+  }
 
-  "CpuBus" should "return immediately on ROM request" in {
-    cpuBus.requestMemory(null, 0xfc0040, 2) should be (true)
-  }
-  it should "delegate request to chip bus for access to chip registers" in {
-    cpuBus.requestMemory(null, 0xdf0000, 2) should be (false)
-    cpuBus.requestMemory(null, 0xdfffff, 2) should be (false)
-  }
-  it should "delegate request to chip bus for access to chip RAM" in {
-    cpuBus.requestMemory(null, 0x000000, 2) should be (false)
-    cpuBus.requestMemory(null, 0x1fffff, 2) should be (false)
+  "DefaultClock" should "exclude the excluded device" in {
+    val clockedDevice1 = new MockClockedDevice
+    val excludedDevice = new MockClockedDevice
+    val clock = new DefaultClock
+    clock.connectDevice(clockedDevice1)
+    clock.connectDevice(excludedDevice)
+    clock.performTicks(2, excludedDevice)
+    
+    clockedDevice1.tickCount should be (2)
+    excludedDevice.tickCount should be (0)
   }
 }

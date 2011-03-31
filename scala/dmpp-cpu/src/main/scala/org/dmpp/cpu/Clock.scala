@@ -39,9 +39,22 @@ package org.dmpp.cpu
  *    performance.
  * 3. We could also realize differently clocked buses with this. Newer Amiga
  *    models employ higher CPU models by clocking them at a multiple of the
- *    Chip bus speed. This could be done by 
+ *    Chip bus speed.
+ *
+ * Note that we can mostly increment the clock by two ticks, because we do not
+ * need to synchronize even cycles, but we have to aware of the video beam
+ * and to align clocking so that the even and odd slots always go to the
+ * right device. Since every line has 455 clock ticks, this should be easy.
  */
-class Clock {
+trait Clock {
+  def connectDevice(clockedDevice: ClockedDevice)
+  def performTicks(numTicks: Int, except: ClockedDevice)
+}
+
+/**
+ * Default clock implementation.
+ */
+class DefaultClock extends Clock {
   private var clockedDevices: List[ClockedDevice] = Nil
 
   /**
