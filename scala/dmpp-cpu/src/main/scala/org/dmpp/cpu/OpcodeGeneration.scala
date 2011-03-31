@@ -237,7 +237,7 @@ case class InstrDef(mnemonic  : String,
         indices.flatMap(value => generateCombinationsFor(varpattern, eaModes,
                                                          value))
     }
-    println(indices)
+    println("indices: " + indices)
   }
   // TODO
   // it would be cool if this would instead return an (index, context)
@@ -245,7 +245,13 @@ case class InstrDef(mnemonic  : String,
   private def generateCombinationsFor(varpattern: Char,
                                       eaModes: List[String],
                                       baseValue: Int): List[Int] = {
-    List(baseValue)
+    varpattern match {
+      case 'e' =>
+        eaModes.flatMap(eamode => EaModePatternMap(eamode).generateCombinations(baseValue))
+      case 'd' | 'a' =>
+        RegisterPattern.generateCombinations(baseValue)
+      case _ => List(baseValue)
+    }
   }
 }
 
