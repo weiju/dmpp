@@ -36,7 +36,7 @@ import org.scalatest.junit.JUnitRunner
 class SubPatternSpec extends FlatSpec with ShouldMatchers {
 
   "RegisterPattern" should "generate combinations" in {
-    val context = ExecutionContext(null, 0, null, 0, 0)
+    val context = ExecutionContext(0, 0)
     val combinations = RegisterPattern.generateCombinations(0x41c0, context)
     combinations.length should be (8)
     combinations(0)._1 should be (0x41c0)
