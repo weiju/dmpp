@@ -53,6 +53,7 @@ trait Clock {
 
 /**
  * Default clock implementation.
+ * @constructor creates a DefaultClock instance
  */
 class DefaultClock extends Clock {
   private var clockedDevices: List[ClockedDevice] = Nil
@@ -91,3 +92,19 @@ trait ClockedDevice {
   def receiveTick(numTicks: Int)
 }
 
+/**
+ * A clock that can be added as a ClockDevice to another clock and divides
+ * the number of ticks it received by a certain number of clock ticks.
+ * @constructor creates a ClockDivider instance
+ * @param divisionSize the division size
+ */
+class ClockDivider(divisionSize: Int) extends DefaultClock with ClockedDevice {
+  var numTicksUnsent: Int = 0
+
+  def receiveTick(numTicks: Int) {
+    numTicksUnsent += numTicks
+    val numTicksToSend = numTicksUnsent / divisionSize
+    numTicksUnsent = numTicksUnsent % divisionSize
+    performTicks(numTicksToSend, null)
+  }
+}

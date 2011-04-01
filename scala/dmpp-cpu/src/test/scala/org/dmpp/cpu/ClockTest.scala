@@ -63,4 +63,25 @@ class ClockSpec extends FlatSpec with ShouldMatchers {
     clockedDevice1.tickCount should be (2)
     excludedDevice.tickCount should be (0)
   }
+
+  "ClockDivider" should "not notify the connected device" in {
+    val clock = new DefaultClock
+    val clockDivider = new ClockDivider(2)
+    val dividedClockDevice = new MockClockedDevice
+    clock.connectDevice(clockDivider)
+    clockDivider.connectDevice(dividedClockDevice)
+
+    clock.performTicks(1, null)
+    dividedClockDevice.tickCount should be (0)
+  }
+  it should "notify the connected device with divided tick number" in {
+    val clock = new DefaultClock
+    val clockDivider = new ClockDivider(2)
+    val dividedClockDevice = new MockClockedDevice
+    clock.connectDevice(clockDivider)
+    clockDivider.connectDevice(dividedClockDevice)
+
+    clock.performTicks(5, null)
+    dividedClockDevice.tickCount should be (2)
+  }
 }
