@@ -255,7 +255,7 @@ extends BorderPanel {
       textarea.text += buffer.toString
     }
     instr.execute
-    amiga.video.doCycles(instr.numCycles)
+    amiga.video.receiveTicks(instr.numCycles)
     context.instructionNum += 1
     if (doOutput) cpuView.update
   }

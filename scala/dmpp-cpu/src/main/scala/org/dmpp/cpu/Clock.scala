@@ -73,9 +73,9 @@ class DefaultClock extends Clock {
    * @param numTicks the number of ticks to perform
    * @param except the device to be excluded from receiving ticks
    */
-  def performTicks(numTicks: Int, except: ClockedDevice) {
+  def performTicks(numTicks: Int, except: ClockedDevice = null) {
     for (device <- clockedDevices) {
-      if (device != except) device.receiveTick(numTicks)
+      if (device != except) device.receiveTicks(numTicks)
     }
   }
 }
@@ -89,7 +89,7 @@ trait ClockedDevice {
    * Receive a certain amount of clock ticks.
    * @param numTicks number of ticks sent by the clock
    */
-  def receiveTick(numTicks: Int)
+  def receiveTicks(numTicks: Int)
 }
 
 /**
@@ -101,7 +101,7 @@ trait ClockedDevice {
 class ClockDivider(divisionSize: Int) extends DefaultClock with ClockedDevice {
   var numTicksUnsent: Int = 0
 
-  def receiveTick(numTicks: Int) {
+  def receiveTicks(numTicks: Int) {
     numTicksUnsent += numTicks
     val numTicksToSend = numTicksUnsent / divisionSize
     numTicksUnsent = numTicksUnsent % divisionSize

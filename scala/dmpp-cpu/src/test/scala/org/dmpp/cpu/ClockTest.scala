@@ -35,7 +35,7 @@ import org.scalatest.junit.JUnitRunner
 class MockClockedDevice extends ClockedDevice {
   var tickCount = 0
 
-  def receiveTick(numTicks: Int) {
+  def receiveTicks(numTicks: Int) {
     tickCount += numTicks
   }
 }

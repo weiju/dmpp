@@ -55,13 +55,15 @@ class InfoPanel(x: Int, y: Int) {
   }
 }
 
-class PlayfieldCanvas(video: Video)
+class PlayfieldCanvas(amiga: Amiga)
 extends JComponent {
   import PlayfieldCanvas._
 
   def videoStandard = video.videoStandard
-  def beam = video.videoBeam
-  def playfield = video.playfield
+  def systemClock   = amiga.systemClock
+  def video         = amiga.video
+  def beam          = video.videoBeam
+  def playfield     = video.playfield
 
   def playfieldLeft = playfield.diwstrt & 0xff
   def playfieldTop  = (playfield.diwstrt >>> 8) & 0xff 
@@ -101,7 +103,7 @@ extends JComponent {
   val beamTimer = new Timer(20, new ActionListener {
       def actionPerformed(event: ActionEvent) {
         repaint()
-        beam.advance(animationSpeed)
+        systemClock.performTicks(animationSpeed)
       }
     })
 
@@ -113,7 +115,7 @@ extends JComponent {
   def startBeam { beamTimer.start }
   def stopBeam { beamTimer.stop }
   def singleStep {
-    beam.advance(1)
+    systemClock.performTicks(1)
     updateDisplay
   }
 

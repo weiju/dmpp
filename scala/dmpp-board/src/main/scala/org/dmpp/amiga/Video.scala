@@ -27,6 +27,8 @@
  */
 package org.dmpp.amiga
 
+import org.dmpp.cpu._
+
 // This module captures one of the most important concepts in an Amiga
 // emulation: Timing.
 // Everything is based on a display screen which is either using NTSC
@@ -107,8 +109,8 @@ object PAL extends VideoStandard {
  * @param notifyVerticalBlank a method to be called on the start of vertical
  *        blanking
  */
-class VideoBeam(videoStandard: VideoStandard,
-                notifyVerticalBlank: () => Unit) {
+class VideoBeam(videoStandard: VideoStandard, notifyVerticalBlank: () => Unit) {
+
   var hpos           = 0
   var vpos           = 0
 
@@ -144,7 +146,8 @@ class VideoBeam(videoStandard: VideoStandard,
  * @param interruptController a reference to the interrupt controller
  */
 class Video(val videoStandard: VideoStandard,
-            interruptController: InterruptController) {
+            interruptController: InterruptController)
+extends ClockedDevice {
 
   /**
    * Color register.
@@ -223,13 +226,7 @@ class Video(val videoStandard: VideoStandard,
   def vpos      = videoBeam.vpos
   def hclocks   = videoBeam.hclocks
 
-  /**
-   * Advance the video beam by a specified amount of cycles.
-   * @param numCycles the number of cycles to advance
-   */
-  def doCycles(numCycles: Int) {
-    videoBeam.advance(numCycles)
-  }
+  def receiveTicks(numTicks: Int) = videoBeam.advance(numTicks)
 
   /**
    * This method is called by the video beam on each start of the vertical

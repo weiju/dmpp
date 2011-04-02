@@ -149,7 +149,7 @@ object Main {
     val copperView = new CopperView(amiga.copper)
     frame.getContentPane.add(copperView, BorderLayout.WEST)
 
-    tabbedPane.add(createVideoPanel(amiga.video), "Video")
+    tabbedPane.add(createVideoPanel(amiga), "Video")
     tabbedPane.add(createCustomChipPanel(amiga), "Custom Chips")
 
     frame.pack
@@ -166,12 +166,12 @@ object Main {
     amiga
   }
 
-  def createVideoPanel(video: Video) = {
+  def createVideoPanel(amiga: Amiga) = {
     val mainPanel = new JPanel(new BorderLayout)
-    val canvas = new PlayfieldCanvas(video)
+    val canvas = new PlayfieldCanvas(amiga)
 
     mainPanel.add(canvas, BorderLayout.CENTER)
-    mainPanel.add(createPlayfieldSettingsPanel(video, canvas),
+    mainPanel.add(createPlayfieldSettingsPanel(amiga.video, canvas),
                   BorderLayout.NORTH)
     mainPanel.add(createStepperPanel(canvas), BorderLayout.SOUTH)
     mainPanel

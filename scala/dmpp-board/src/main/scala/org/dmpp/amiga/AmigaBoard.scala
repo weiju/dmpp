@@ -26,6 +26,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 package org.dmpp.amiga
+import org.dmpp.cpu.{DefaultClock, ClockedDevice,ClockDivider}
 import org.mahatma68k._
 import org.dmpp.cymus._
 import java.io.File
@@ -102,10 +103,15 @@ class Amiga extends AddressSpace {
 
   // $e80000 is Autoconfig, UAE returns all 11111's here
   val autoConf = new DummyAddressSpace("[AutoConf]", 0xffffff)
-
   autoConf.debug = false
   val romtagMem = new DummyAddressSpace("[RomTagArea]")
   romtagMem.debug = false
+
+  // initializing clock devices
+  val systemClock = new DefaultClock
+  val ciaClock = new ClockDivider(10)
+  systemClock.connectDevice(ciaClock)
+  systemClock.connectDevice(video)
 
   def ciaA = ciaSpace.ciaA
   def ciaB = ciaSpace.ciaB
@@ -246,9 +252,10 @@ class Amiga extends AddressSpace {
   }
   /**
    * Increment the system's clock, excluding the CPU.
+   * DEPRECATED: This will be replaced by system clock
    */
   def doCycles(numCycles: Int) {
-    video.doCycles(numCycles)
+    video.receiveTicks(numCycles)
     ciaA.pulseAll(numCycles)
     ciaB.pulseAll(numCycles)
     dmaController.doDmaWithCpu(numCycles)
