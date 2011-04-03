@@ -7,7 +7,7 @@ class DmppProject(info: ProjectInfo) extends ParentProject(info) {
   val scalatest = "org.scalatest" % "scalatest" % "1.3" % "test"
 
   lazy val cpu   = project("dmpp-cpu", "dmpp-cpu")
-  lazy val cymus = project("dmpp-cymus", "dmpp-cymus")
-  lazy val board = project("dmpp-board", "dmpp-board", cymus)
+  lazy val cymus = project("dmpp-cymus", "dmpp-cymus", cpu)
+  lazy val board = project("dmpp-board", "dmpp-board", cymus, cpu)
   lazy val debugger = project("dmpp-debugger", "dmpp-debugger", cymus, board)
 }

@@ -27,6 +27,8 @@
  */
 package org.dmpp.cymus
 
+import org.dmpp.cpu.ClockedDevice
+
 /**
  * Super class for the CIA-8520 and CIA-6526.
  * The only difference is the TOD clock (24 bit counter in 8520
@@ -41,7 +43,9 @@ object AbstractCia {
   val CRA  = 14
   val CRB  = 15
 }
-abstract class AbstractCia(aLabel: String) {
+
+abstract class AbstractCia(aLabel: String) extends ClockedDevice {
+
   // **********************************************************************
   // ***** CIA COMPONENTS
   // **********************************************************************
@@ -374,14 +378,14 @@ abstract class AbstractCia(aLabel: String) {
   protected def pulseTod(n: Int)
 
   /**
-   * Sends n pulses to TOD, 02 and CNT. We might actually not need to handle
+   * Sends n ticks to TOD, 02 and CNT. We might actually not need to handle
    * separate signals.
-   * @param n number of pulses to send
+   * @param numTicks number of ticks sent
    */
-  def pulseAll(n: Int) {
-    pulse02(n)
-    pulseCnt(n)
-    pulseTod(n)
+  def receiveTicks(numTicks: Int) {
+    pulse02(numTicks)
+    pulseCnt(numTicks)
+    pulseTod(numTicks)
   }
 
   // **********************************************************************

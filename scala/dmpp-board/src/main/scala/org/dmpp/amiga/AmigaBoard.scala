@@ -110,8 +110,11 @@ class Amiga extends AddressSpace {
   // initializing clock devices
   val systemClock = new DefaultClock
   val ciaClock = new ClockDivider(10)
+  println("connecting clocked devices")
   systemClock.connectDevice(ciaClock)
   systemClock.connectDevice(video)
+  ciaClock.connectDevice(ciaA)
+  ciaClock.connectDevice(ciaB)
 
   def ciaA = ciaSpace.ciaA
   def ciaB = ciaSpace.ciaB
@@ -256,8 +259,8 @@ class Amiga extends AddressSpace {
    */
   def doCycles(numCycles: Int) {
     video.receiveTicks(numCycles)
-    ciaA.pulseAll(numCycles)
-    ciaB.pulseAll(numCycles)
+    ciaA.receiveTicks(numCycles) // wrong: TODO: divider is 10
+    ciaB.receiveTicks(numCycles)
     dmaController.doDmaWithCpu(numCycles)
   }
 }

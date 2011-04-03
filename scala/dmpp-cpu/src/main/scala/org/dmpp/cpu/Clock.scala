@@ -105,6 +105,6 @@ class ClockDivider(divisionSize: Int) extends DefaultClock with ClockedDevice {
     numTicksUnsent += numTicks
     val numTicksToSend = numTicksUnsent / divisionSize
     numTicksUnsent = numTicksUnsent % divisionSize
-    performTicks(numTicksToSend, null)
+    if (numTicksToSend > 0) performTicks(numTicksToSend, null)
   }
 }
