@@ -79,7 +79,7 @@ class CopperListMemory extends AddressSpace {
   }
 }
 
-class MockVideo extends Video(NTSC, null) {
+class MockVideo extends Video(NTSC) {
 }
 
 /**
@@ -122,7 +122,7 @@ class CopperSpec extends FlatSpec with ShouldMatchers with BeforeAndAfterEach {
     // point to address 0x20000, which is in chip mem
     copper.COP1LCL.value = 0x0000
     copper.COP1LCH.value = 0x0002
-    copper.restartOnVerticalBlank
+    copper.notifyVerticalBlank
 
     copper.pc should be (0x20000)
   }
@@ -210,7 +210,7 @@ class CopperSpec extends FlatSpec with ShouldMatchers with BeforeAndAfterEach {
     mockMemory.addCopperList(copperList)
     copper.COP1LCL.value = 0x0000
     copper.COP1LCH.value = 0x0002
-    copper.restartOnVerticalBlank
+    copper.notifyVerticalBlank
     copper.enabled = true
   }
 }

@@ -42,7 +42,7 @@ object Copper {
   val NumWaitingCycles = 0
 }
 
-class Copper extends DmaChannel {
+class Copper extends DmaChannel with VerticalBlankListener {
   import Copper._
 
   case class CopperPosition(hp: Int, vp: Int, he: Int, ve: Int)
@@ -66,7 +66,7 @@ class Copper extends DmaChannel {
   def video = _video
   def video_=(aVideo: Video) {
     _video = aVideo
-    _video.copper = this
+    _video.addVerticalBlankListener(this)
   }
 
   override def reset {
@@ -75,7 +75,7 @@ class Copper extends DmaChannel {
     danger  = false
   }
 
-  def restartOnVerticalBlank {
+  def notifyVerticalBlank {
     pc      = cop1lc
     waiting = false
   }

@@ -33,7 +33,9 @@ import org.mahatma68k.InterruptAcknowledge.VectorType
 /**
  * The InterruptController holds the enable and request masks.
  */
-class InterruptController extends InterruptAcknowledge {
+class InterruptController extends InterruptAcknowledge
+with VerticalBlankListener {
+
   var intena = 0
   var intreq = 0
   var cpu: Cpu = null
@@ -63,5 +65,9 @@ class InterruptController extends InterruptAcknowledge {
   }
   def acknowledge(level: Int) = {
     VectorType.AUTOVECTOR
+  }
+
+  def notifyVerticalBlank {
+    INTREQ.value = 1 << 5
   }
 }

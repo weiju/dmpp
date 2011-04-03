@@ -89,6 +89,14 @@ object PAL extends VideoStandard {
   val DisplayableLinesInterlace = 567
 }
 
+trait VerticalBlankListener {
+  def notifyVerticalBlank: Unit
+}
+
+trait HorizontalBlankListener {
+  def notifyHorizontalBlank: Unit
+}
+
 /**
  * Timing is absolutely crucial for a faithful Amiga emulation.
  * This is a class to capture the essence of Amiga timing:
@@ -106,10 +114,11 @@ object PAL extends VideoStandard {
  * and from 0 to (312 - 1) (PAL) or 262 (NTSC) vertically
  * @constructor creates a VideoBeam object
  * @param videoStandard PAL or NTSC
- * @param notifyVerticalBlank a method to be called on the start of vertical
- *        blanking
  */
-class VideoBeam(videoStandard: VideoStandard, notifyVerticalBlank: () => Unit) {
+class VideoBeam(videoStandard: VideoStandard) {
+
+  private var verticalBlankListeners   : List[VerticalBlankListener] = Nil
+  private var horizontalBlankListeners : List[HorizontalBlankListener] = Nil
 
   var hpos           = 0
   var vpos           = 0
@@ -132,9 +141,26 @@ class VideoBeam(videoStandard: VideoStandard, notifyVerticalBlank: () => Unit) {
       hpos -= videoStandard.CpuCyclesPerScanline
       if (vpos >= videoStandard.LinesTotal) {
         vpos = 0
-        notifyVerticalBlank() // note: the () must be added to call the method
+        verticalBlankListeners.foreach(_.notifyVerticalBlank)
       }
+      horizontalBlankListeners.foreach(_.notifyHorizontalBlank)
     }
+  }
+
+  /**
+   * Adds a vertical blank listener.
+   * @param listener vertical blank listener
+   */
+  def addVerticalBlankListener(listener: VerticalBlankListener) {
+    verticalBlankListeners ::= listener
+  }
+
+  /**
+   * Adds a horizontal blank listener.
+   * @param listener horizontal blank listener
+   */
+  def addHorizontalBlankListener(listener: HorizontalBlankListener) {
+    horizontalBlankListeners ::= listener
   }
 }
 
@@ -143,10 +169,8 @@ class VideoBeam(videoStandard: VideoStandard, notifyVerticalBlank: () => Unit) {
  * the SpriteSystem and the VideoBeam.
  * @constructor creates a new Video object
  * @param videoStandard either PAL or NTSC
- * @param interruptController a reference to the interrupt controller
  */
-class Video(val videoStandard: VideoStandard,
-            interruptController: InterruptController)
+class Video(val videoStandard: VideoStandard)
 extends ClockedDevice {
 
   /**
@@ -160,9 +184,8 @@ extends ClockedDevice {
     }
   }
 
-  val videoBeam = new VideoBeam(videoStandard, notifyVerticalBlank _)
+  val videoBeam = new VideoBeam(videoStandard)
   val playfield = new PlayfieldSystem(this)
-  var copper: Copper = null
 
   // Color registers are shared between sprites and playfields, so they are
   // placed in the Video object
@@ -232,9 +255,26 @@ extends ClockedDevice {
    * This method is called by the video beam on each start of the vertical
    * blanking phase.
    */
+/*
   private def notifyVerticalBlank {
     println("VERTICAL BLANK !!!!");
     if (interruptController != null) interruptController.INTREQ.value = 1 << 5
     if (copper != null) copper.restartOnVerticalBlank
+  }
+*/
+  /**
+   * Adds a vertical blank listener.
+   * @param listener vertical blank listener
+   */
+  def addVerticalBlankListener(listener: VerticalBlankListener) {
+    videoBeam.addVerticalBlankListener(listener)
+  }
+
+  /**
+   * Adds a horizontal blank listener.
+   * @param listener horizontal blank listener
+   */
+  def addHorizontalBlankListener(listener: HorizontalBlankListener) {
+    videoBeam.addHorizontalBlankListener(listener)
   }
 }

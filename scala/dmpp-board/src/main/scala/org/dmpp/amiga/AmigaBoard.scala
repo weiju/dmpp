@@ -84,7 +84,7 @@ class Amiga extends AddressSpace {
   val floppyController    = new FloppyController
   val interruptController = new InterruptController
   val dmaController       = new DmaController
-  val video               = new Video(NTSC, interruptController)
+  val video               = new Video(NTSC)
   val addressMap          = new Array[AddressSpace](AddressBanks)
 
   // It is useful to be able to access CIA, custom chips and chip memory
@@ -113,8 +113,6 @@ class Amiga extends AddressSpace {
   println("connecting clocked devices")
   systemClock.connectDevice(ciaClock)
   systemClock.connectDevice(video)
-  ciaClock.connectDevice(ciaA)
-  ciaClock.connectDevice(ciaB)
 
   def ciaA = ciaSpace.ciaA
   def ciaB = ciaSpace.ciaB
@@ -124,6 +122,8 @@ class Amiga extends AddressSpace {
 
   def init(filename : String) = {
     interruptController.cpu = cpu
+    video.addVerticalBlankListener(interruptController)
+
     dmaController.amiga = this
     // initialize global address space
     for (i <- 0 to AddressBanks - 1) addressMap(i) = dummymem
@@ -165,6 +165,18 @@ class Amiga extends AddressSpace {
     import org.dmpp.cymus.AbstractCia._
 
     // Initialize listeners to receive messages from system components
+    // Clock inputs:
+    // - Timers get 1/10th of the system clock
+    // - TOD CIA A gets vertical sync, CIA B gets horizontal sync
+    ciaClock.connectDevice(ciaA)
+    ciaClock.connectDevice(ciaB)
+    video.addVerticalBlankListener(new VerticalBlankListener {
+      def notifyVerticalBlank = ciaA.todTick
+    })
+    video.addHorizontalBlankListener(new HorizontalBlankListener {
+      def notifyHorizontalBlank = ciaB.todTick
+    })
+
     ciaA.addListener(new CiaChangeListener {
       private def overlayBitSet(value : Int) = (value & 0x01) == 1
       private def overlayKickstart = {

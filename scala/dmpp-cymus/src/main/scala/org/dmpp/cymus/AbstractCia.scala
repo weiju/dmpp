@@ -372,21 +372,20 @@ abstract class AbstractCia(aLabel: String) extends ClockedDevice {
   }
 
   /**
-   * Sends n pulses to the TOD pin.
-   * @param n number of pulses to send
-   */
-  protected def pulseTod(n: Int)
-
-  /**
-   * Sends n ticks to TOD, 02 and CNT. We might actually not need to handle
+   * Sends n ticks to 02 and CNT. We might actually not need to handle
    * separate signals.
    * @param numTicks number of ticks sent
    */
   def receiveTicks(numTicks: Int) {
     pulse02(numTicks)
     pulseCnt(numTicks)
-    pulseTod(numTicks)
   }
+
+  /**
+   * Sends one tick to the TOD pin. These ticks happen only on
+   * vertical or horizontal blanking, so sending one tick is sufficient. 
+   */
+  def todTick: Unit
 
   // **********************************************************************
   // ***** REGISTER ACCESS

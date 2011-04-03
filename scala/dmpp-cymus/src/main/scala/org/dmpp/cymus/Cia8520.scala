@@ -104,9 +104,9 @@ class Cia8520(aLabel: String) extends AbstractCia(aLabel) {
         def value_=(aValue: Int) { }
       }
     }
-    def pulse(n: Int) {
+    def tick {
       if (running) {
-        count += n
+        count += 1
         if (count > 0xffffff) {
           println("CIA TOD-24 OVERFLOW !!!")
           count &= 0xffffff
@@ -138,5 +138,5 @@ class Cia8520(aLabel: String) extends AbstractCia(aLabel) {
     super.reset
     tod.reset
   }
-  protected def pulseTod(n: Int) { tod.pulse(n) }
+  def todTick = tod.tick
 }
