@@ -102,17 +102,13 @@ class Amiga extends AddressSpace {
   val dummymem            = new DummyAddressSpace("Dummy")
 
   // $e80000 is Autoconfig, UAE returns all 11111's here
-  val autoConf = new DummyAddressSpace("[AutoConf]", 0xffffff)
-  autoConf.debug = false
-  val romtagMem = new DummyAddressSpace("[RomTagArea]")
-  romtagMem.debug = false
+  val autoConf            = new DummyAddressSpace("[AutoConf]", 0xffffff)
+  autoConf.debug          = false
+  val romtagMem           = new DummyAddressSpace("[RomTagArea]")
+  romtagMem.debug         = false
 
   // initializing clock devices
-  val systemClock = new DefaultClock
-  val ciaClock = new ClockDivider(10)
-  println("connecting clocked devices")
-  systemClock.connectDevice(ciaClock)
-  systemClock.connectDevice(video)
+  val systemClock         = new DefaultClock
 
   def ciaA = ciaSpace.ciaA
   def ciaB = ciaSpace.ciaB
@@ -121,14 +117,20 @@ class Amiga extends AddressSpace {
   var kickromOverlayMode = false
 
   def init(filename : String) = {
-    interruptController.cpu = cpu
-    video.addVerticalBlankListener(interruptController)
-
-    dmaController.amiga = this
-    // initialize global address space
-    for (i <- 0 to AddressBanks - 1) addressMap(i) = dummymem
     kickrom = MemoryFactory.readKickstartFromFile(new File(filename),
                                                   ROMStart)
+    interruptController.cpu = cpu
+    dmaController.amiga = this
+
+    initAddressSpace
+    initCIAs
+    connectSystemClock
+    connectVideoBeam
+  }
+
+  private def initAddressSpace {
+    // initialize global address space
+    for (i <- 0 to AddressBanks - 1) addressMap(i) = dummymem
     println("MAPPING KICKSTART ROM...")
     mapAddressSpaceToRange(kickrom, 0xfc, 0xff)
     mapAddressSpaceToRange(romtagMem, 0xf0, 0xf7)
@@ -150,32 +152,39 @@ class Amiga extends AddressSpace {
     mapAddressSpaceToRange(customSpace, 0xc0, 0xc0 + 0x1f)
 
     cpu.setAddressSpace(this)
-    initCIAs
     cpu.setPC(readLong(0x04)) // System start address
     printf("Initial long word of Kickstart: %08x\n", readLong(0x00))
 
-    floppyController.connect(ciaA, ciaB)
-    
     // initialize Copper
-    copper.video        = video
     copper.addressSpace = this
   }
 
-  def initCIAs() {
-    import org.dmpp.cymus.AbstractCia._
+  private def connectSystemClock {
+    val ciaClock = new ClockDivider(10)
+    systemClock.connectDevice(ciaClock)
+    systemClock.connectDevice(video)
+    ciaClock.connectDevice(ciaA)
+    ciaClock.connectDevice(ciaB)
+    copper.video = video
+  }
+
+  private def connectVideoBeam {
+    video.addVerticalBlankListener(interruptController)
 
     // Initialize listeners to receive messages from system components
     // Clock inputs:
     // - Timers get 1/10th of the system clock
     // - TOD CIA A gets vertical sync, CIA B gets horizontal sync
-    ciaClock.connectDevice(ciaA)
-    ciaClock.connectDevice(ciaB)
     video.addVerticalBlankListener(new VerticalBlankListener {
       def notifyVerticalBlank = ciaA.todTick
     })
     video.addHorizontalBlankListener(new HorizontalBlankListener {
       def notifyHorizontalBlank = ciaB.todTick
     })
+  }
+
+  private def initCIAs() {
+    import org.dmpp.cymus.AbstractCia._
 
     ciaA.addListener(new CiaChangeListener {
       private def overlayBitSet(value : Int) = (value & 0x01) == 1
@@ -231,13 +240,15 @@ class Amiga extends AddressSpace {
     ciaA.setRegister(PRA, 0x01) // set OVL
     ciaB.setRegister(DDRA, 0xff)
     ciaB.setRegister(DDRB, 0xff)
+
+    floppyController.connect(ciaA, ciaB)    
   }
 
-  def mapAddressSpaceToRange(addressSpace: AddressSpace, startIndex: Int,
+  private def mapAddressSpaceToRange(addressSpace: AddressSpace, startIndex: Int,
                              endIndex: Int) = {
     for (i <- startIndex to endIndex) addressMap(i) = addressSpace
   }
-  def addAddressSpace(addressSpace : AddressSpace) = {
+  private def addAddressSpace(addressSpace : AddressSpace) = {
     mapAddressSpaceToRange(addressSpace, addressSpace.start >> 16,
                            (addressSpace.start + addressSpace.size - 1) >> 16)
   }
