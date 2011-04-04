@@ -28,11 +28,13 @@
 package org.dmpp.amiga
 import org.mahatma68k.AddressSpace
 
+/**
+ * An exception that is thrown when the Copper accesses an illegal area.
+ */
 class IllegalCopperAccessException extends Exception
 
 /**
- * The Copper class implements the Copper coprocessor of the Amiga system.
- * It is implemented as a DmaChannel to provide a more generic interface.
+ * Symbolic constants used by the Copper.
  */
 object Copper {
   val NumMoveCycles    = 4 // 2 odd memory cycles
@@ -42,6 +44,11 @@ object Copper {
   val NumWaitingCycles = 0
 }
 
+/**
+ * The Copper class implements the Copper coprocessor of the Amiga system.
+ * It is implemented as a DmaChannel to provide a more generic interface.
+ * @constructor creates an instance of the Copper class
+ */
 class Copper extends DmaChannel with VerticalBlankListener {
   import Copper._
 
@@ -75,6 +82,7 @@ class Copper extends DmaChannel with VerticalBlankListener {
     danger  = false
   }
 
+  /** Vertical blank listener. */
   def notifyVerticalBlank {
     pc      = cop1lc
     waiting = false
@@ -87,6 +95,9 @@ class Copper extends DmaChannel with VerticalBlankListener {
     currentPos >= comparePos
   }
 
+  /**
+   * Deprecated: should use the revised timing scheme.
+   */
   override def doDma: Int = {
     if (!enabled) return 0
     if (waiting && !positionReached) NumWaitingCycles

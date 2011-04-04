@@ -76,6 +76,10 @@ object Amiga {
   val AddressBanks     = 0x100
 }
 
+/**
+ * Implementation of an Amiga system. The system components are wired
+ * in this class.
+ */
 class Amiga extends AddressSpace {
 
   import Amiga._

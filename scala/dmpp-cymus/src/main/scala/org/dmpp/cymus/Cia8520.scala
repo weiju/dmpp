@@ -28,8 +28,7 @@
 package org.dmpp.cymus
 
 /**
- * Implementation of the Complex Interface Adapter (CIA) 8520, as used in
- * the Amiga.
+ * Constants used in the Cia implementation.
  */
 object Cia8520 {
   val REGISTER_NAMES = Array(
@@ -40,6 +39,12 @@ object Cia8520 {
   )
 }
 
+/**
+ * Implementation of the Complex Interface Adapter (CIA) 8520, as used in
+ * the Amiga.
+ * @constructor creates a new CIA 8520 instance
+ * @param aLabel the name of this CIA chip in the system
+ */
 class Cia8520(aLabel: String) extends AbstractCia(aLabel) {
   // **********************************************************************
   // ***** 24 BIT TOD CLOCK
@@ -127,16 +132,34 @@ class Cia8520(aLabel: String) extends AbstractCia(aLabel) {
     serialPort.sdr, icr,       timerA.cr, timerB.cr
   )
 
+  /**
+   * Returns the value of the specified register number.
+   * @param regnum register number
+   * @return register value
+   */
   protected def getReg(regnum: Int) = reg(regnum)
+
+  /**
+   * Returns the CIA register name.
+   * @param regnum register number
+   * @return register name
+   */
   protected def getRegName(regnum: Int) = Cia8520.REGISTER_NAMES(regnum)
 
   // **********************************************************************
   // ***** PUBLIC INTERFACE
   // **********************************************************************
 
+  /**
+   * Resets this CIA chip object.
+   */
   override def reset {
     super.reset
     tod.reset
   }
+
+  /**
+   * Pulse the TOD clock with a single tick.
+   */
   def todTick = tod.tick
 }
