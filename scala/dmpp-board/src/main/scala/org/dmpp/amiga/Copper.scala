@@ -48,7 +48,7 @@ object Copper {
  * The Copper class implements the Copper coprocessor of the Amiga system.
  * @constructor creates an instance of the Copper class
  */
-class Copper extends AbstractDmaChannel
+class Copper extends DmaChannel
 with VerticalBlankListener with ClockedDevice {
   import Copper._
 
@@ -89,10 +89,19 @@ with VerticalBlankListener with ClockedDevice {
     _video.addVerticalBlankListener(this)
   }
 
-  override def reset {
-    super.reset
+  def reset {
+    enabled = false
     waiting = false
     danger  = false
+  }
+
+  /**
+   * TODO: we need to adapt this behavior to states
+   */
+  private var _enabled = false
+  def enabled = _enabled  
+  def enabled_=(flag: Boolean) {
+    _enabled = flag
   }
 
   def receiveTicks(numTicks: Int) = currentState.receiveTicks(numTicks)
@@ -113,7 +122,7 @@ with VerticalBlankListener with ClockedDevice {
   /**
    * Deprecated: should use the revised timing scheme.
    */
-  override def doDma: Int = {
+  def doDma: Int = {
     if (!enabled) return 0
     if (waiting && !positionReached) NumWaitingCycles
     else if (waiting && positionReached) {
