@@ -29,7 +29,7 @@ package org.dmpp.amiga
 
 import java.io._
 import java.nio.ByteBuffer
-import org.mahatma68k.AddressSpace
+import org.dmpp.common.AddressSpace
 
 /**
  * Memory that is used for read-only access, e.g. Kickstart ROM

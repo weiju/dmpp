@@ -1,5 +1,5 @@
 /**
- * Created on March 30, 2011
+ * Created on March 27, 2011
  * Copyright (c) 2009-2011, Wei-ju Wu
  * All rights reserved.
  *
@@ -25,31 +25,16 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.dmpp.cpu
+package org.dmpp.common
 
-import org.scalatest.FlatSpec
-import org.scalatest.matchers.ShouldMatchers
-import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
-
-object MockChipBus extends Bus {
-  def requestMemory(device: BusDevice, address: Int, numCycles: Int) = false
+trait AddressSpace extends org.mahatma68k.AddressSpace {
+  def start: Int
+  def size: Int
+  def readByte(address: Int): Int
+  def readShort(address: Int): Int
+  def readLong(address: Int): Int
+  def writeByte(address: Int, value: Int)
+  def writeShort(address: Int, value: Int)
+  def writeLong(address: Int, value: Int)
 }
 
-@RunWith(classOf[JUnitRunner])
-class CpuBusSpec extends FlatSpec with ShouldMatchers {
-
-  val cpuBus = new CpuBus(MockChipBus)
-
-  "CpuBus" should "return immediately on ROM request" in {
-    cpuBus.requestMemory(null, 0xfc0040, 2) should be (true)
-  }
-  it should "delegate request to chip bus for access to chip registers" in {
-    cpuBus.requestMemory(null, 0xdf0000, 2) should be (false)
-    cpuBus.requestMemory(null, 0xdfffff, 2) should be (false)
-  }
-  it should "delegate request to chip bus for access to chip RAM" in {
-    cpuBus.requestMemory(null, 0x000000, 2) should be (false)
-    cpuBus.requestMemory(null, 0x1fffff, 2) should be (false)
-  }
-}

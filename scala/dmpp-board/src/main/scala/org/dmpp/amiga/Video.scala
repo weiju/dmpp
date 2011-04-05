@@ -27,7 +27,7 @@
  */
 package org.dmpp.amiga
 
-import org.dmpp.cpu._
+import org.dmpp.common.ClockedDevice
 
 // This module captures one of the most important concepts in an Amiga
 // emulation: Timing.

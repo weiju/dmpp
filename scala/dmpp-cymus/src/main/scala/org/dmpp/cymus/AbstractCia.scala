@@ -27,7 +27,7 @@
  */
 package org.dmpp.cymus
 
-import org.dmpp.cpu.ClockedDevice
+import org.dmpp.common.ClockedDevice
 
 /**
  * Super class for the CIA-8520 and CIA-6526.

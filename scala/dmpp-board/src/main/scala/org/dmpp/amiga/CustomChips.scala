@@ -26,7 +26,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 package org.dmpp.amiga
-import org.mahatma68k.AddressSpace
+import org.dmpp.common.AddressSpace
 
 trait ICustomChipReg {
   def name : String

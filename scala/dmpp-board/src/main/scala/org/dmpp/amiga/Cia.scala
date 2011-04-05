@@ -27,7 +27,7 @@
  */
 package org.dmpp.amiga
 import java.util.ArrayList
-import org.mahatma68k.AddressSpace
+import org.dmpp.common.AddressSpace
 import org.dmpp.cymus.Cia8520
 
 class IllegalAccessException extends Exception

@@ -26,7 +26,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 package org.dmpp.amiga
-import org.mahatma68k.AddressSpace
+import org.dmpp.common.{AddressSpace,ClockedDevice}
 
 /**
  * An exception that is thrown when the Copper accesses an illegal area.
@@ -46,11 +46,23 @@ object Copper {
 
 /**
  * The Copper class implements the Copper coprocessor of the Amiga system.
- * It is implemented as a DmaChannel to provide a more generic interface.
  * @constructor creates an instance of the Copper class
  */
-class Copper extends DmaChannel with VerticalBlankListener {
+class Copper extends DmaChannel
+with VerticalBlankListener with ClockedDevice {
   import Copper._
+
+  trait CopperState {
+    def receiveTicks(numTicks: Int): Unit
+  }
+
+  object CopperInactive extends CopperState {
+    def receiveTicks(numTicks: Int) { }
+  }
+  class CopperWaiting extends CopperState {
+    def receiveTicks(numTicks: Int) {
+    }
+  }
 
   case class CopperPosition(hp: Int, vp: Int, he: Int, ve: Int)
 
@@ -66,6 +78,7 @@ class Copper extends DmaChannel with VerticalBlankListener {
   private def comparePos             = ir1 & compareMask
 
   var addressSpace : AddressSpace = null
+  var currentState: CopperState   = CopperInactive
   var waiting : Boolean           = false
   var danger  : Boolean           = false
   var pc                          = 0
@@ -81,6 +94,8 @@ class Copper extends DmaChannel with VerticalBlankListener {
     waiting = false
     danger  = false
   }
+
+  def receiveTicks(numTicks: Int) = currentState.receiveTicks(numTicks)
 
   /** Vertical blank listener. */
   def notifyVerticalBlank {

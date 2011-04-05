@@ -1,5 +1,5 @@
 /**
- * Created on March 31, 2011
+ * Created on March 30, 2011
  * Copyright (c) 2009-2011, Wei-ju Wu
  * All rights reserved.
  *
@@ -25,63 +25,31 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.dmpp.cpu
+package org.dmpp.common
 
 import org.scalatest.FlatSpec
 import org.scalatest.matchers.ShouldMatchers
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
-class MockClockedDevice extends ClockedDevice {
-  var tickCount = 0
-
-  def receiveTicks(numTicks: Int) {
-    tickCount += numTicks
-  }
+object MockChipBus extends Bus {
+  def requestMemory(device: BusDevice, address: Int, numCycles: Int) = false
 }
 
 @RunWith(classOf[JUnitRunner])
-class ClockSpec extends FlatSpec with ShouldMatchers {
+class CpuBusSpec extends FlatSpec with ShouldMatchers {
 
-  "DefaultClock" should "send ticks to its connected devices" in {
-    val clockedDevice = new MockClockedDevice
-    val clock = new DefaultClock
-    clock.connectDevice(clockedDevice)
-    clock.performTicks(2, null)
-    
-    clockedDevice.tickCount should be (2)
+  val cpuBus = new CpuBus(MockChipBus)
+
+  "CpuBus" should "return immediately on ROM request" in {
+    cpuBus.requestMemory(null, 0xfc0040, 2) should be (true)
   }
-
-  "DefaultClock" should "exclude the excluded device" in {
-    val clockedDevice1 = new MockClockedDevice
-    val excludedDevice = new MockClockedDevice
-    val clock = new DefaultClock
-    clock.connectDevice(clockedDevice1)
-    clock.connectDevice(excludedDevice)
-    clock.performTicks(2, excludedDevice)
-    
-    clockedDevice1.tickCount should be (2)
-    excludedDevice.tickCount should be (0)
+  it should "delegate request to chip bus for access to chip registers" in {
+    cpuBus.requestMemory(null, 0xdf0000, 2) should be (false)
+    cpuBus.requestMemory(null, 0xdfffff, 2) should be (false)
   }
-
-  "ClockDivider" should "not notify the connected device" in {
-    val clock = new DefaultClock
-    val clockDivider = new ClockDivider(2)
-    val dividedClockDevice = new MockClockedDevice
-    clock.connectDevice(clockDivider)
-    clockDivider.connectDevice(dividedClockDevice)
-
-    clock.performTicks(1, null)
-    dividedClockDevice.tickCount should be (0)
-  }
-  it should "notify the connected device with divided tick number" in {
-    val clock = new DefaultClock
-    val clockDivider = new ClockDivider(2)
-    val dividedClockDevice = new MockClockedDevice
-    clock.connectDevice(clockDivider)
-    clockDivider.connectDevice(dividedClockDevice)
-
-    clock.performTicks(5, null)
-    dividedClockDevice.tickCount should be (2)
+  it should "delegate request to chip bus for access to chip RAM" in {
+    cpuBus.requestMemory(null, 0x000000, 2) should be (false)
+    cpuBus.requestMemory(null, 0x1fffff, 2) should be (false)
   }
 }

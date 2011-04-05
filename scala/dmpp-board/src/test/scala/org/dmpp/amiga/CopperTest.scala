@@ -33,7 +33,7 @@ import org.scalatest.matchers.ShouldMatchers
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
-import org.mahatma68k.AddressSpace
+import org.dmpp.common.AddressSpace
 
 case class CopperList(address: Int, words: List[Int]) {
   def contains(anAddress: Int) = {

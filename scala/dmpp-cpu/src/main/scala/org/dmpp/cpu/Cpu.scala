@@ -30,16 +30,7 @@ package org.dmpp.cpu
 import java.io._
 import java.nio._
 
-trait AddressSpace {
-  def start: Int
-  def size: Int
-  def readByte(address: Int): Int
-  def readShort(address: Int): Int
-  def readLong(address: Int): Int
-  def writeByte(address: Int, value: Int)
-  def writeShort(address: Int, value: Int)
-  def writeLong(address: Int, value: Int)
-}
+import org.dmpp.common.AddressSpace
 
 object KickstartROM {
   val ROMStart         = 0xfc0000

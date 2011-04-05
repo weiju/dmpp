@@ -26,8 +26,8 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 package org.dmpp.amiga
-import org.dmpp.cpu.{DefaultClock, ClockedDevice,ClockDivider}
-import org.mahatma68k._
+import org.dmpp.common._
+import org.mahatma68k.{Cpu}
 import org.dmpp.cymus._
 import java.io.File
 
