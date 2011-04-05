@@ -1,7 +1,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.dmpp</groupId>
-  <artifactId>dmpp-debugger</artifactId>
+  <artifactId>dmpp-common</artifactId>
   <version>1.0-SNAPSHOT</version>
   <parent>
     <groupId>org.dmpp</groupId>
@@ -10,9 +10,59 @@
   </parent>
 
   <!-- General information -->
-  <name>DMPP Debugger</name>
-  <description>A graphical debugger for DMPP</description>
+  <name>dmpp-common</name>
+  <description>DMPP base abstractions</description>
   <inceptionYear>2011</inceptionYear>
+  <organization>
+    <name>Box of Rats LLC</name>
+    <url>http://www.boxofrats.com/</url>
+  </organization>
+	<packaging>jar</packaging>
+  <developers>
+    <developer>
+      <id>weiju</id>
+      <name>Wei-ju Wu</name>
+      <email>Weiju.Wu@gmail.com</email>
+      <url>http://blog.boxofrats.com</url>
+      <organization>Box of Rats LLC</organization>
+      <roles>
+        <role>Software Developer</role>
+      </roles>
+      <timezone>-8</timezone>
+      <properties>
+      </properties>
+    </developer>
+  </developers>
+
+  <!-- Plugin Repository -->
+  <pluginRepositories>
+    <pluginRepository>
+      <id>scala-tools.org</id>
+      <name>Scala-Tools Maven2 Repository</name>
+      <url>http://scala-tools.org/repo-releases</url>
+    </pluginRepository>
+    <pluginRepository>
+      <id>codehaus-plugins</id>
+      <url>http://dist.codehaus.org/</url>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+    </pluginRepository>
+    <pluginRepository>
+      <id>codehaus-plugins-legacy</id>
+      <url>http://dist.codehaus.org/</url>
+      <layout>legacy</layout>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+    </pluginRepository>
+  </pluginRepositories>
 
   <repositories>
     <repository>
@@ -21,23 +71,11 @@
       <url>http://scala-tools.org/repo-releases</url>
     </repository>
   </repositories>
-  <pluginRepositories>
-    <pluginRepository>
-      <id>scala-tools.org</id>
-      <name>Scala-Tools Maven2 Repository</name>
-      <url>http://scala-tools.org/repo-releases</url>
-    </pluginRepository>
-  </pluginRepositories>
 
   <dependencies>
     <dependency>
       <groupId>org.scala-lang</groupId>
       <artifactId>scala-library</artifactId>
-      <version>${scala.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.scala-lang</groupId>
-      <artifactId>scala-swing</artifactId>
       <version>${scala.version}</version>
     </dependency>
     <dependency>
@@ -47,48 +85,14 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.scala-tools.testing</groupId>
-      <artifactId>specs_2.8.0</artifactId>
-      <version>1.6.5</version>
+      <groupId>org.scalatest</groupId>
+      <artifactId>scalatest</artifactId>
+      <version>1.3</version>
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.jmock</groupId>
-      <artifactId>jmock</artifactId>
-      <version>2.5.1</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.jmock</groupId>
-      <artifactId>jmock-junit4</artifactId>
-      <version>2.5.1</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.jmock</groupId>
-      <artifactId>jmock-legacy</artifactId>
-      <version>2.5.1</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.hamcrest</groupId>
-      <artifactId>hamcrest-core</artifactId>
-      <version>1.1</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.dmpp</groupId>
-      <artifactId>dmpp-common</artifactId>
-      <version>1.0-SNAPSHOT</version>
-    </dependency>
-    <dependency>
-      <groupId>org.dmpp</groupId>
-      <artifactId>dmpp-cpu</artifactId>
-      <version>1.0-SNAPSHOT</version>
-    </dependency>
-    <dependency>
-      <groupId>org.dmpp</groupId>
-      <artifactId>dmpp-board</artifactId>
+      <groupId>org.mahatma68k</groupId>
+      <artifactId>mahatma68k</artifactId>
       <version>1.0-SNAPSHOT</version>
     </dependency>
   </dependencies>
@@ -116,6 +120,15 @@
           </args>
         </configuration>
       </plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <includes>
+            <include>**/*Spec.class</include>
+          </includes>
+        </configuration>
+			</plugin>
     </plugins>
   </build>
 </project>

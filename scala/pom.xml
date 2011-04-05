@@ -16,9 +16,10 @@
   </properties>
 
   <modules>
+    <module>dmpp-common</module>
+    <module>dmpp-cpu</module>
     <module>dmpp-cymus</module>
     <module>dmpp-board</module>
     <module>dmpp-debugger</module>
-    <module>dmpp-cpu</module>
   </modules>
 </project>
