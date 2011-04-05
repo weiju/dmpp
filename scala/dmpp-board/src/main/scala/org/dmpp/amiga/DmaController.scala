@@ -27,7 +27,13 @@
  */
 package org.dmpp.amiga
 
-class DmaChannel {
+trait DmaChannel {
+  def enabled: Boolean
+  def enabled_=(flag: Boolean): Unit
+  def reset: Unit
+  def doDma: Int
+}
+class AbstractDmaChannel extends DmaChannel {
   var enabled = false
 
   /**
@@ -44,19 +50,19 @@ class DmaController {
   // Amiga DMA classification
   // DMA classes ordered by priority
   // disk comes first -> 3 cycles per scanline
-  val disk     = new DmaChannel
+  val disk     = new AbstractDmaChannel
   // audio comes next -> 4 cycles per scanline
-  val audio3   = new DmaChannel
-  val audio2   = new DmaChannel
-  val audio1   = new DmaChannel
-  val audio0   = new DmaChannel
+  val audio3   = new AbstractDmaChannel
+  val audio2   = new AbstractDmaChannel
+  val audio1   = new AbstractDmaChannel
+  val audio0   = new AbstractDmaChannel
   // sprite dma -> 16 cycles per scanline
-  val sprite   = new DmaChannel
+  val sprite   = new AbstractDmaChannel
   // bitplane dma -> 80 + x cycles per scanline, depending on video setting
-  val bitplane = new DmaChannel
+  val bitplane = new AbstractDmaChannel
   // these ones get the rest
-  val blitter  = new DmaChannel
-  val cpu      = new DmaChannel
+  val blitter  = new AbstractDmaChannel
+  val cpu      = new AbstractDmaChannel
 
   var blitterPriority                = false
   var masterEnable                   = false

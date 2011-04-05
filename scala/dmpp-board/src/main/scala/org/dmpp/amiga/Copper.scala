@@ -48,7 +48,7 @@ object Copper {
  * The Copper class implements the Copper coprocessor of the Amiga system.
  * @constructor creates an instance of the Copper class
  */
-class Copper extends DmaChannel
+class Copper extends AbstractDmaChannel
 with VerticalBlankListener with ClockedDevice {
   import Copper._
 
