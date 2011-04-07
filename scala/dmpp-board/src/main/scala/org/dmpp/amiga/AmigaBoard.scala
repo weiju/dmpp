@@ -90,11 +90,12 @@ class Amiga extends AddressSpace {
   val dmaController       = new DmaController
   val video               = new Video(NTSC)
   val addressMap          = new Array[AddressSpace](AddressBanks)
+  val cpuBus              = new CpuBus(dmaController)
 
   // It is useful to be able to access CIA, custom chips and chip memory
   // directly, so we expose them here
   val cpu                 = new Cpu
-  val copper              = new Copper
+  val copper              = new Copper(dmaController)
   val blitter             = new Blitter
   val ciaSpace            = new CiaSpace
   val customSpace         = new CustomAddressSpace(interruptController,
@@ -290,4 +291,22 @@ class Amiga extends AddressSpace {
     ciaB.receiveTicks(numCycles)
     dmaController.doDmaWithCpu(numCycles)
   }
+}
+
+/**
+ * Implementation of the CPU bus.
+ * @constructor creates a CPU bus instance
+ * @param chipBus the Chip bus
+ */
+class CpuBus(chipBus: Bus) extends Bus {
+  def requestMemory(device: BusDevice, address: Int, numCycles: Int) = {
+    if (isChipRegisterAddress(address) || isChipRamAddress(address)) {
+      chipBus.requestMemory(device, address, numCycles)
+    } else true
+  }
+
+  private def isChipRegisterAddress(address: Int) = {
+    address >= 0xdf0000 && address <= 0xdfffff
+  }
+  private def isChipRamAddress(address: Int) = address < 0x200000
 }

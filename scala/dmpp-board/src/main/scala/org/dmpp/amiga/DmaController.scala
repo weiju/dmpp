@@ -27,6 +27,8 @@
  */
 package org.dmpp.amiga
 
+import org.dmpp.common._
+
 trait DmaChannel {
   def enabled: Boolean
   def enabled_=(flag: Boolean): Unit
@@ -46,7 +48,7 @@ class AbstractDmaChannel extends DmaChannel {
   }
 }
 
-class DmaController {
+class DmaController extends Bus {
   // Amiga DMA classification
   // DMA classes ordered by priority
   // disk comes first -> 3 cycles per scanline
@@ -133,5 +135,10 @@ class DmaController {
       audio1.enabled, audio0.enabled, disk.enabled,
       sprite.enabled, blitter.enabled,
       copper.enabled, bitplane.enabled)
+  }
+
+  // Chip bus interface
+  def requestMemory(device: BusDevice, address: Int, numCycles: Int) = {
+    true
   }
 }

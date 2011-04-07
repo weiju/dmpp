@@ -33,7 +33,7 @@ import org.scalatest.matchers.ShouldMatchers
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
-import org.dmpp.common.AddressSpace
+import org.dmpp.common._
 
 case class CopperList(address: Int, words: List[Int]) {
   def contains(anAddress: Int) = {
@@ -87,12 +87,16 @@ class MockVideo extends Video(NTSC) {
  */
 @RunWith(classOf[JUnitRunner])
 class CopperSpec extends FlatSpec with ShouldMatchers with BeforeAndAfterEach {
+  // defined here to avoid scope conflicts
+  class MockChipBus extends Bus {
+    def requestMemory(device: BusDevice, address: Int, numCycles: Int) = true
+  }
 
   val NoCyclesUsed = 0
 
   val mockMemory = new CopperListMemory
   val mockVideo: MockVideo = new MockVideo
-  val copper: Copper = new Copper
+  val copper: Copper = new Copper(new MockChipBus)
   copper.addressSpace = mockMemory
   copper.video = mockVideo
 

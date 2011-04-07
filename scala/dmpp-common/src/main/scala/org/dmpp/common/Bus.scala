@@ -83,20 +83,3 @@ trait Bus {
   def requestMemory(device: BusDevice, address: Int, numCycles: Int): Boolean
 }
 
-/**
- * Implementation of the CPU bus.
- * @constructor creates a CPU bus instance
- * @param chipBus the Chip bus
- */
-class CpuBus(chipBus: Bus) extends Bus {
-  def requestMemory(device: BusDevice, address: Int, numCycles: Int) = {
-    if (isChipRegisterAddress(address) || isChipRamAddress(address)) {
-      chipBus.requestMemory(device, address, numCycles)
-    } else true
-  }
-
-  private def isChipRegisterAddress(address: Int) = {
-    address >= 0xdf0000 && address <= 0xdfffff
-  }
-  private def isChipRamAddress(address: Int) = address < 0x200000
-}

@@ -25,12 +25,14 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.dmpp.common
+package org.dmpp.amiga
 
 import org.scalatest.FlatSpec
 import org.scalatest.matchers.ShouldMatchers
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
+
+import org.dmpp.common._
 
 object MockChipBus extends Bus {
   def requestMemory(device: BusDevice, address: Int, numCycles: Int) = false

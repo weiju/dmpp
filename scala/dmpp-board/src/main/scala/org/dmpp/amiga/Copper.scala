@@ -26,7 +26,8 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 package org.dmpp.amiga
-import org.dmpp.common.{AddressSpace,ClockedDevice}
+
+import org.dmpp.common._
 
 /**
  * An exception that is thrown when the Copper accesses an illegal area.
@@ -47,20 +48,61 @@ object Copper {
 /**
  * The Copper class implements the Copper coprocessor of the Amiga system.
  * @constructor creates an instance of the Copper class
+ * @param chipBus the Chip bus to request memory from
  */
-class Copper extends DmaChannel
+class Copper(chipBus: Bus) extends DmaChannel
 with VerticalBlankListener with ClockedDevice {
   import Copper._
 
+  /**
+   * Interface for Copper states.
+   */
   trait CopperState {
+    /**
+     * Receives a number of clock ticks.
+     * @param numTicks the number of ticks to receive
+     */
     def receiveTicks(numTicks: Int): Unit
+    /**
+     * Return the enabled status of the Copper.
+     * @return true if enabled, false otherwise
+     */
+    def enabled: Boolean
   }
 
+  /**
+   * The null state of the Copper.
+   */
   object CopperInactive extends CopperState {
     def receiveTicks(numTicks: Int) { }
+    def enabled = false
   }
-  class CopperWaiting extends CopperState {
+
+  class ActiveCopperState extends CopperState {
+    var ticksReceivedSoFar = 0
+    def enabled = true
     def receiveTicks(numTicks: Int) {
+      ticksReceivedSoFar += 1
+    }
+  }
+
+  /**
+   */
+  class CopperWaiting extends ActiveCopperState {
+  }
+  class CopperWakeup extends ActiveCopperState {
+  }
+  /**
+   * An intermediate state that decides the instruction based on
+   * which instruction was read. It waits for 2 memory cycles (the time
+   * to fetch 2 memory words from the chip bus) and then switches to
+   * the next state.
+   */
+  class CopperDecoding extends ActiveCopperState {
+    override def receiveTicks(numTicks: Int) {
+      super.receiveTicks(numTicks)
+      // TODO: decide instruction
+      
     }
   }
 
@@ -90,18 +132,15 @@ with VerticalBlankListener with ClockedDevice {
   }
 
   def reset {
-    enabled = false
+    currentState = CopperInactive
     waiting = false
     danger  = false
   }
 
-  /**
-   * TODO: we need to adapt this behavior to states
-   */
-  private var _enabled = false
-  def enabled = _enabled  
+  def enabled = currentState.enabled
   def enabled_=(flag: Boolean) {
-    _enabled = flag
+    currentState = if (flag) new CopperDecoding
+                   else CopperInactive
   }
 
   def receiveTicks(numTicks: Int) = currentState.receiveTicks(numTicks)
