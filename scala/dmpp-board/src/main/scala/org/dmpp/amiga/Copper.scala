@@ -51,7 +51,7 @@ object Copper {
  * @param chipBus the Chip bus to request memory from
  */
 class Copper(chipBus: Bus) extends DmaChannel
-with VerticalBlankListener with ClockedDevice {
+with VerticalBlankListener with ClockedDevice with BusDevice {
   import Copper._
 
   /**
@@ -68,6 +68,7 @@ with VerticalBlankListener with ClockedDevice {
      * @return true if enabled, false otherwise
      */
     def enabled: Boolean
+    def memoryRequestAcknowledged: Unit
   }
 
   /**
@@ -76,6 +77,7 @@ with VerticalBlankListener with ClockedDevice {
   object CopperInactive extends CopperState {
     def receiveTicks(numTicks: Int) { }
     def enabled = false
+    def memoryRequestAcknowledged { }
   }
 
   class ActiveCopperState extends CopperState {
@@ -84,6 +86,7 @@ with VerticalBlankListener with ClockedDevice {
     def receiveTicks(numTicks: Int) {
       ticksReceivedSoFar += 1
     }
+    def memoryRequestAcknowledged { }
   }
 
   /**
@@ -99,10 +102,13 @@ with VerticalBlankListener with ClockedDevice {
    * the next state.
    */
   class CopperDecoding extends ActiveCopperState {
+    var waitForMem = false
     override def receiveTicks(numTicks: Int) {
       super.receiveTicks(numTicks)
-      // TODO: decide instruction
-      
+      if (!waitForMem) {
+        chipBus.requestMemory(Copper.this, pc, 2)
+        waitForMem = true
+      }
     }
   }
 
@@ -144,6 +150,7 @@ with VerticalBlankListener with ClockedDevice {
   }
 
   def receiveTicks(numTicks: Int) = currentState.receiveTicks(numTicks)
+  def memoryRequestAcknowledged = currentState.memoryRequestAcknowledged
 
   /** Vertical blank listener. */
   def notifyVerticalBlank {

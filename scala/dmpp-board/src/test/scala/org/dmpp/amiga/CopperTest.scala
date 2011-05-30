@@ -87,23 +87,38 @@ class MockVideo extends Video(NTSC) {
  */
 @RunWith(classOf[JUnitRunner])
 class CopperSpec extends FlatSpec with ShouldMatchers with BeforeAndAfterEach {
+
+  // simple simulation of the chip bus
   // defined here to avoid scope conflicts
-  class MockChipBus extends Bus {
-    def requestMemory(device: BusDevice, address: Int, numCycles: Int) = true
+  object MockChipBus extends Bus {
+    var ack = true
+    var memoryRequested = false
+    def requestMemory(device: BusDevice, address: Int, numCycles: Int) = {
+      memoryRequested = true
+      ack
+    }
+    def reset {
+      ack = true
+      memoryRequested = false
+    }
   }
 
   val NoCyclesUsed = 0
 
   val mockMemory = new CopperListMemory
   val mockVideo: MockVideo = new MockVideo
-  val copper: Copper = new Copper(new MockChipBus)
+  val copper: Copper = new Copper(MockChipBus)
   copper.addressSpace = mockMemory
   copper.video = mockVideo
 
   override def beforeEach {
     mockMemory.reset
+    MockChipBus.reset
   }
 
+  // **********************************************************************
+  // ****** General state
+  // ***********************
   "Copper" should "have a valid initial state" in {
     copper.addressSpace should not be (null)
     copper.enabled      should be (false)
@@ -111,7 +126,9 @@ class CopperSpec extends FlatSpec with ShouldMatchers with BeforeAndAfterEach {
   }
   it should "do nothing when disabled" in {
     copper.enabled = false
-    copper.doDma should equal (NoCyclesUsed)
+    copper.receiveTicks(2)
+    copper.pc should equal (0)
+    copper.enabled should be (false)
   }
   it should "be in a safe state after a reset" in {
     copper.enabled = true
@@ -122,6 +139,7 @@ class CopperSpec extends FlatSpec with ShouldMatchers with BeforeAndAfterEach {
     copper.waiting should be (false)
     copper.danger  should be (false)
   }
+
   it should "be ready to run copper list 1 after verticalBlank" in {
     // point to address 0x20000, which is in chip mem
     copper.COP1LCL.value = 0x0000
@@ -130,6 +148,7 @@ class CopperSpec extends FlatSpec with ShouldMatchers with BeforeAndAfterEach {
 
     copper.pc should be (0x20000)
   }
+
   it should "jump to copper list 1 after COPJMP1 is written" in {
     copper.COP1LCL.value = 0x0000
     copper.COP1LCH.value = 0x0002
@@ -137,6 +156,7 @@ class CopperSpec extends FlatSpec with ShouldMatchers with BeforeAndAfterEach {
 
     copper.pc should be (0x20000)
   }
+
   it should "jump to copper list 2 after COPJMP2 is written" in {
     copper.COP2LCL.value = 0x0000
     copper.COP2LCH.value = 0x0003
@@ -144,6 +164,17 @@ class CopperSpec extends FlatSpec with ShouldMatchers with BeforeAndAfterEach {
 
     copper.pc should be (0x30000)
   }
+
+  // **********************************************************************
+  // ****** Execution
+  // ***********************
+  it should "execute another move instruction" in {
+    addCopperListAndRestart(CopperList(0x20000, List(0x00e0, 0x0002)))
+    copper.receiveTicks(2)
+    MockChipBus.memoryRequested should be (true)
+
+  }
+
   it should "execute a move instruction" in {
     // first copper instruction in the HRM: a move of #$02 into
     // $dff0e0 (BPL1PTH)
@@ -152,6 +183,7 @@ class CopperSpec extends FlatSpec with ShouldMatchers with BeforeAndAfterEach {
     mockMemory.writeLog.length should be (1)
     mockMemory.writeLog(0)     should be ("#2.w -> $dff0e0")
   }
+
   it should "fail when moving to a protected location" in {
     // move #$02, $40
     addCopperListAndRestart(CopperList(0x20000, List(0x0040, 0x0002)))
@@ -160,6 +192,7 @@ class CopperSpec extends FlatSpec with ShouldMatchers with BeforeAndAfterEach {
     addCopperListAndRestart(CopperList(0x20000, List(0x007e, 0x0002)))
     evaluating { copper.doDma } should produce [IllegalCopperAccessException]
   }
+
   it should "not fail when moving to a protected location and danger bit is set" in {
     copper.COPCON.value = 2 // set danger bit
     // move #$02, $40
@@ -168,6 +201,7 @@ class CopperSpec extends FlatSpec with ShouldMatchers with BeforeAndAfterEach {
     mockMemory.writeLog.length should be (1)
     mockMemory.writeLog(0)     should be ("#2.w -> $dff040")
   }
+
   it should "not fail when moving to an illegal location even if danger bit is set" in {
     copper.COPCON.value = 2 // set danger bit
     // move #$02, $38

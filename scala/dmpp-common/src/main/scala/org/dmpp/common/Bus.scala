@@ -44,9 +44,8 @@ package org.dmpp.common
 // ***** 2. the chip bus, which the DMA controller controls.
 // *****
 // ***** A BusDevice sends a memory request to the bus, requesting a
-// ***** certain number of cycles.
-// ***** When the Bus responds with a false, a BusDevice is expected
-// ***** to switch into waiting mode. The DMA controller stores the
+// ***** certain number of cycles and then switches into
+// ***** waiting mode. The DMA controller stores the
 // ***** request and wakes up the device when all requested cycles could
 // ***** be allocated to it.
 // *****
@@ -65,7 +64,7 @@ trait BusDevice {
   /**
    * Notify a waiting device that its memory request was satisfied.
    */
-  def wakeup
+  def memoryRequestAcknowledged: Unit
 }
 
 /**
@@ -78,8 +77,6 @@ trait Bus {
    * @param device the requesting BusDevice
    * @param address the address of the request
    * @param numCycles the number of cycles requested
-   * @return true if the request can be satisfied immediately, false if not
    */
-  def requestMemory(device: BusDevice, address: Int, numCycles: Int): Boolean
+  def requestMemory(device: BusDevice, address: Int, numCycles: Int): Unit
 }
-
