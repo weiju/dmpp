@@ -81,20 +81,18 @@ with VerticalBlankListener with ClockedDevice with BusDevice {
   }
 
   class ActiveCopperState extends CopperState {
-    var ticksReceivedSoFar = 0
+    private[this] var ticksReceivedSoFar = 0
     def enabled = true
     def receiveTicks(numTicks: Int) {
-      ticksReceivedSoFar += 1
+      ticksReceivedSoFar += numTicks
     }
     def memoryRequestAcknowledged { }
   }
 
   /**
    */
-  class CopperWaiting extends ActiveCopperState {
-  }
-  class CopperWakeup extends ActiveCopperState {
-  }
+  class CopperWaiting extends ActiveCopperState
+  class CopperWakeup extends ActiveCopperState
   /**
    * An intermediate state that decides the instruction based on
    * which instruction was read. It waits for 2 memory cycles (the time

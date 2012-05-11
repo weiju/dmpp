@@ -8,7 +8,7 @@ object MyBuild extends Build {
   def buildSettings = Seq(
     organization := "org.dmpp",
     version := "1.0",
-    scalaVersion := "2.9.1",
+    scalaVersion := "2.9.2",
     javacOptions in Compile ++= Seq("-target", "6", "-source", "6"),
     resolvers += "Local Maven Repository" at "file://"+Path.userHome.absolutePath+"/.m2/repository"
   )
@@ -26,6 +26,8 @@ object MyBuild extends Build {
 
   def buildDependencies = libraryDependencies ++= Seq(
     "org.mahatma68k" % "mahatma68k" % "1.0-SNAPSHOT",
-    "org.scala-lang" % "scala-swing" % "2.9.1")
+    "org.scalatest" %% "scalatest" % "1.6.1",
+    "junit" % "junit" % "4.9",
+    "org.scala-lang" % "scala-swing" % "2.9.2")
 }
 
