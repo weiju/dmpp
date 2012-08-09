@@ -159,7 +159,7 @@ object MemoryFactory {
       val mem = ByteBuffer.wrap(byteArray)
       new ReadOnlyMemory(mem, offset, memsize)
     } catch {
-      case e => e.printStackTrace
+      case e: Throwable => e.printStackTrace
       null
     } finally {
       if (fis != null) fis.close

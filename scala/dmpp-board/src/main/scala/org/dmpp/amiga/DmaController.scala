@@ -138,7 +138,5 @@ class DmaController extends Bus {
   }
 
   // Chip bus interface
-  def requestMemory(device: BusDevice, address: Int, numCycles: Int) = {
-    true
-  }
+  def requestMemory(device: BusDevice, address: Int, numCycles: Int) = true
 }
