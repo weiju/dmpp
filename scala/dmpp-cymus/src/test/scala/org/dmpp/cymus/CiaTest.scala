@@ -27,13 +27,12 @@
  */
 package org.dmpp.cymus
 
-import org.scalatest.FlatSpec
-import org.scalatest.matchers.ShouldMatchers
+import org.scalatest._
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
-class CiaSpec extends FlatSpec with ShouldMatchers {
+class CiaSpec extends FlatSpec with Matchers {
   "CIA 8520" should "set a port register" in {
     val cia = new Cia8520("CIA Test");
     cia.portAPins = 0x06                 // %00000110

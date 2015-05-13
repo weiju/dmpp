@@ -27,13 +27,12 @@
  */
 package org.dmpp.cpu
 
-import org.scalatest.FlatSpec
-import org.scalatest.matchers.ShouldMatchers
+import org.scalatest._
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
-class SubPatternSpec extends FlatSpec with ShouldMatchers {
+class SubPatternSpec extends FlatSpec with Matchers {
 
   "RegisterPattern" should "generate combinations" in {
     val context = ExecutionContext(0, 0)

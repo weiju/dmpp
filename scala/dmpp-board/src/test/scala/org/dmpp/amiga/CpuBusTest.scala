@@ -27,8 +27,7 @@
  */
 package org.dmpp.amiga
 
-import org.scalatest.FlatSpec
-import org.scalatest.matchers.ShouldMatchers
+import org.scalatest._
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
@@ -45,7 +44,7 @@ object MockBusDevice extends BusDevice {
  * Bus protocol changed, tests do not work anymore
  */
 @RunWith(classOf[JUnitRunner])
-class CpuBusSpec extends FlatSpec with ShouldMatchers {
+class CpuBusSpec extends FlatSpec with Matchers {
 
   val cpuBus = new CpuBus(MockChipBus)
 

@@ -27,13 +27,12 @@
  */
 package org.dmpp.cymus;
 
-import org.scalatest.FlatSpec
-import org.scalatest.matchers.ShouldMatchers
+import org.scalatest._
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
-class ShiftRegisterSpec extends FlatSpec with ShouldMatchers {
+class ShiftRegisterSpec extends FlatSpec with Matchers {
 
   "ShiftRegister" should "be initialized" in {
     val reg = new ShiftRegister(4)
@@ -54,7 +53,7 @@ class ShiftRegisterSpec extends FlatSpec with ShouldMatchers {
     reg.enqueue(false)
     reg.enqueue(true)
 
-    evaluating { reg.enqueue(true) } should produce [IndexOutOfBoundsException]
+    an [IndexOutOfBoundsException] should be thrownBy { reg.enqueue(true) }
   }
   it should "wrap around slots" in {
     val reg = new ShiftRegister(2)

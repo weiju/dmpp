@@ -27,9 +27,7 @@
  */
 package org.dmpp.amiga
 
-import org.scalatest.FlatSpec
-import org.scalatest.BeforeAndAfterEach
-import org.scalatest.matchers.ShouldMatchers
+import org.scalatest._
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
@@ -86,7 +84,7 @@ class MockVideo extends Video(NTSC) {
  * A test for Copper functionality.
  */
 @RunWith(classOf[JUnitRunner])
-class CopperSpec extends FlatSpec with ShouldMatchers with BeforeAndAfterEach {
+class CopperSpec extends FlatSpec with Matchers with BeforeAndAfterEach {
 
   // simple simulation of the chip bus
   // defined here to avoid scope conflicts
@@ -187,10 +185,10 @@ class CopperSpec extends FlatSpec with ShouldMatchers with BeforeAndAfterEach {
   it should "fail when moving to a protected location" in {
     // move #$02, $40
     addCopperListAndRestart(CopperList(0x20000, List(0x0040, 0x0002)))
-    evaluating { copper.doDma } should produce [IllegalCopperAccessException]
+    an [IllegalCopperAccessException] should be thrownBy { copper.doDma }
     // move #$02, $7e
     addCopperListAndRestart(CopperList(0x20000, List(0x007e, 0x0002)))
-    evaluating { copper.doDma } should produce [IllegalCopperAccessException]
+    an [IllegalCopperAccessException] should be thrownBy { copper.doDma }
   }
 
   it should "not fail when moving to a protected location and danger bit is set" in {
@@ -206,7 +204,7 @@ class CopperSpec extends FlatSpec with ShouldMatchers with BeforeAndAfterEach {
     copper.COPCON.value = 2 // set danger bit
     // move #$02, $38
     addCopperListAndRestart(CopperList(0x20000, List(0x0038, 0x0002)))
-    evaluating { copper.doDma } should produce [IllegalCopperAccessException]
+    an [IllegalCopperAccessException] should be thrownBy { copper.doDma }
   }
 
   it should "execute a wait instruction" in {

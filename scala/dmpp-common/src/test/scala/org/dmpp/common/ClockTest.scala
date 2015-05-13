@@ -27,8 +27,7 @@
  */
 package org.dmpp.common
 
-import org.scalatest.FlatSpec
-import org.scalatest.matchers.ShouldMatchers
+import org.scalatest._
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
@@ -41,7 +40,7 @@ class MockClockedDevice extends ClockedDevice {
 }
 
 @RunWith(classOf[JUnitRunner])
-class ClockSpec extends FlatSpec with ShouldMatchers {
+class ClockSpec extends FlatSpec with Matchers {
 
   "DefaultClock" should "send ticks to its connected devices" in {
     val clockedDevice = new MockClockedDevice
