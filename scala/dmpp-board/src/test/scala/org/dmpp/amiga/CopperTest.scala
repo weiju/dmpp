@@ -68,7 +68,7 @@ class CopperListMemory extends AddressSpace {
   }
   private def addLog(log: String) = {
     writeLog ::= log
-    writeLog reverse
+    writeLog.reverse
   }
   def writeLong(address: Int, value: Int) { }
 
@@ -91,9 +91,8 @@ class CopperSpec extends FlatSpec with Matchers with BeforeAndAfterEach {
   object MockChipBus extends Bus {
     var ack = true
     var memoryRequested = false
-    def requestMemory(device: BusDevice, address: Int, numCycles: Int) = {
+    def requestMemory(device: BusDevice, address: Int, numCycles: Int) {
       memoryRequested = true
-      ack
     }
     def reset {
       ack = true

@@ -34,7 +34,7 @@ import org.scalatest.junit.JUnitRunner
 import org.dmpp.common._
 
 object MockChipBus extends Bus {
-  def requestMemory(device: BusDevice, address: Int, numCycles: Int) = false
+  def requestMemory(device: BusDevice, address: Int, numCycles: Int) { }
 }
 object MockBusDevice extends BusDevice {
   def memoryRequestAcknowledged {}

@@ -71,7 +71,7 @@ class DmaController extends Bus {
   private var _amiga       : Amiga   = null // to advance the system clock
   private var copper       : Copper  = null
   private var _dmaChannels : Array[DmaChannel] = null
-  
+
   def amiga = _amiga
   def amiga_=(anAmiga: Amiga) {
     _amiga = anAmiga
@@ -82,7 +82,6 @@ class DmaController extends Bus {
                          disk, sprite, blitter, copper, bitplane)
   }
 
-  
   def doDmaWithStolenCpuCycles = {
     // Perform DMA until the CPU can get it
     var cycles = 0
@@ -98,11 +97,11 @@ class DmaController extends Bus {
     amiga.doCycles(cycles)
     cycles
   }
-  
+
   def doDmaWithCpu(numCycles: Int) {
     // EMPTY FOR NOW
   }
-  
+
   // expose the control register here
   val DMACON = new CustomChipWriteRegister("DMACON") {
     def value_=(aValue: Int) {
@@ -138,5 +137,6 @@ class DmaController extends Bus {
   }
 
   // Chip bus interface
-  def requestMemory(device: BusDevice, address: Int, numCycles: Int) = true
+  def requestMemory(device: BusDevice, address: Int, numCycles: Int) {
+  }
 }

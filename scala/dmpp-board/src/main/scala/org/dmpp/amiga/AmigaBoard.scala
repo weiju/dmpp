@@ -55,7 +55,7 @@ import java.io.File
  * - rt clock:     0xdc0000-0xdcffff
  * we currently use following simplifications:
  * - romtag memory responds with 0's
- * - autoconf mem responds with 0's  
+ * - autoconf mem responds with 0's
  */
 object Amiga {
   val CIAStart         = 0xbf0000
@@ -72,7 +72,7 @@ object Amiga {
   // Since the standard Motorola 68000 has an address space of 24 Bit,
   // there are 256 address banks, with the highest address being
   // occupied by the Kickstart ROM. An address is mapped to a bank by
-  // shifting it 4 bytes to the right. 
+  // shifting it 4 bytes to the right.
   val AddressBanks     = 0x100
 }
 
@@ -218,7 +218,7 @@ class Amiga extends AddressSpace {
       }
       override def ciaRegisterChanged(regnum: Int, value: Int) { }
     })
-    ciaB.addListener(new CiaChangeListener {      
+    ciaB.addListener(new CiaChangeListener {
       override def praOutput(value: Int) = {
         printf("CIA B PRA output = value: %04x\n", value)
       }
@@ -240,13 +240,13 @@ class Amiga extends AddressSpace {
       }
     })
     // Initial component states
-    ciaA.portAPins = 0x20 // set /RDY 
+    ciaA.portAPins = 0x20 // set /RDY
     ciaA.setRegister(DDRA, 3) // intitial DDRA-A state
     ciaA.setRegister(PRA, 0x01) // set OVL
     ciaB.setRegister(DDRA, 0xff)
     ciaB.setRegister(DDRB, 0xff)
 
-    floppyController.connect(ciaA, ciaB)    
+    floppyController.connect(ciaA, ciaB)
   }
 
   private def mapAddressSpaceToRange(addressSpace: AddressSpace, startIndex: Int,
@@ -299,10 +299,10 @@ class Amiga extends AddressSpace {
  * @param chipBus the Chip bus
  */
 class CpuBus(chipBus: Bus) extends Bus {
-  def requestMemory(device: BusDevice, address: Int, numCycles: Int) = {
+  def requestMemory(device: BusDevice, address: Int, numCycles: Int) {
     if (isChipRegisterAddress(address) || isChipRamAddress(address)) {
       chipBus.requestMemory(device, address, numCycles)
-    } else true
+    }
   }
 
   private def isChipRegisterAddress(address: Int) = {
